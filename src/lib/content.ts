@@ -31,6 +31,26 @@ export async function savePageContent(
   });
 }
 
+export async function updatePageBrands(
+  slug: string,
+  brands: Brand[]
+): Promise<void> {
+  const db = getAdminDb();
+  const ref = db.collection(COLLECTION).doc(slug);
+  const existing = await ref.get();
+  if (existing.exists) {
+    await ref.update({ brands });
+  } else {
+    await ref.set({
+      slug,
+      blocks: [],
+      brands,
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    });
+  }
+}
+
 export interface BrandWithProject extends Brand {
   projectSlug: string;
   projectName: string;
@@ -43,26 +63,29 @@ export async function getAllBrands(): Promise<BrandWithProject[]> {
     db.collection("portfolio_routes").get(),
   ]);
 
-  const routeMap = new Map<string, string>();
+  const routeMap = new Map<string, { label: string; hidden: boolean }>();
   for (const doc of routesSnapshot.docs) {
     const data = doc.data();
     const slug = (data.route as string)?.replace(/^\//, "");
-    if (slug) routeMap.set(slug, data.label as string);
+    if (slug) routeMap.set(slug, { label: data.label as string, hidden: !!data.hidden });
   }
 
   const brands: BrandWithProject[] = [];
 
   for (const doc of contentSnapshot.docs) {
-    const data = doc.data() as PageContent;
-    if (data.brands) {
-      const projectName = routeMap.get(data.slug) ?? data.slug;
-      for (const brand of data.brands) {
-        brands.push({
-          ...brand,
-          projectSlug: data.slug,
-          projectName,
-        });
-      }
+    const data = doc.data();
+    const slug = doc.id;
+    const brandsList = data.brands as Brand[] | undefined;
+    if (!brandsList?.length) continue;
+    const route = routeMap.get(slug);
+    if (route?.hidden) continue;
+    const projectName = route?.label ?? slug;
+    for (const brand of brandsList) {
+      brands.push({
+        ...brand,
+        projectSlug: slug,
+        projectName,
+      });
     }
   }
 

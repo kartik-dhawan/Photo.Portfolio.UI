@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import BrandAvatar from "@/components/common/BrandAvatar";
 import { Brand } from "@/store/content";
-import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
+import { CONTENT_API_ROUTES, API_ROUTES } from "@/routeConfig/apiRoutes";
 import { projectSettingsSchema, ProjectSettingsFormValues } from "./schema";
 
 interface ExistingBrand extends Brand {
@@ -15,24 +15,34 @@ interface ExistingBrand extends Brand {
 
 interface Props {
   slug: string;
-  brands: Brand[];
-  onChange: (brands: Brand[]) => void;
-  onFileAdd: (blobUrl: string, file: File) => void;
-  onFileRemove: (blobUrl: string) => void;
+  routeId: string;
+  initialLabel: string;
+  initialBrands: Brand[];
+  onSaved: (brands: Brand[], label: string) => void;
+  onStateChange?: (state: { hasChanges: boolean; saving: boolean; save: () => Promise<void> }) => void;
 }
 
 export default function ProjectSettingsForm({
   slug,
-  brands,
-  onChange,
-  onFileAdd,
-  onFileRemove,
+  routeId,
+  initialLabel,
+  initialBrands,
+  onSaved,
+  onStateChange,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [mode, setMode] = useState<"new" | "existing">("new");
   const [allBrands, setAllBrands] = useState<ExistingBrand[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(false);
+
+  const [label, setLabel] = useState(initialLabel);
+  const [brands, setBrands] = useState<Brand[]>(initialBrands);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  // Track pending file uploads (blob URL -> File)
+  const pendingFiles = useRef<Map<string, File>>(new Map());
 
   useEffect(() => {
     setLoadingBrands(true);
@@ -44,7 +54,15 @@ export default function ProjectSettingsForm({
       .finally(() => setLoadingBrands(false));
   }, []);
 
-  // Deduplicate existing brands by name, exclude ones already added
+  // Sync if parent data changes (e.g. after content save)
+  useEffect(() => {
+    setBrands(initialBrands);
+  }, [initialBrands]);
+
+  useEffect(() => {
+    setLabel(initialLabel);
+  }, [initialLabel]);
+
   const addedNames = new Set(brands.map((b) => b.name.toLowerCase()));
   const uniqueExisting = allBrands.reduce<ExistingBrand[]>((acc, b) => {
     const key = b.name.toLowerCase();
@@ -68,12 +86,12 @@ export default function ProjectSettingsForm({
     const file = e.target.files?.[0];
     if (!file) return;
     const blobUrl = URL.createObjectURL(file);
-    onFileAdd(blobUrl, file);
+    pendingFiles.current.set(blobUrl, file);
     setLogoPreview(blobUrl);
     e.target.value = "";
   };
 
-  const onSubmit = (data: ProjectSettingsFormValues) => {
+  const onAddBrand = (data: ProjectSettingsFormValues) => {
     const brand: Brand = {
       id: crypto.randomUUID(),
       name: data.name,
@@ -81,7 +99,7 @@ export default function ProjectSettingsForm({
       socialUrl: data.socialUrl || undefined,
       review: data.review || undefined,
     };
-    onChange([...brands, brand]);
+    setBrands((prev) => [...prev, brand]);
     reset();
     setLogoPreview("");
   };
@@ -94,22 +112,111 @@ export default function ProjectSettingsForm({
       socialUrl: existing.socialUrl,
       review: "",
     };
-    onChange([...brands, brand]);
+    setBrands((prev) => [...prev, brand]);
   };
 
   const handleRemove = (id: string) => {
     const removed = brands.find((b) => b.id === id);
-    if (removed?.logoUrl) onFileRemove(removed.logoUrl);
-    onChange(brands.filter((b) => b.id !== id));
+    if (removed?.logoUrl && pendingFiles.current.has(removed.logoUrl)) {
+      URL.revokeObjectURL(removed.logoUrl);
+      pendingFiles.current.delete(removed.logoUrl);
+    }
+    setBrands((prev) => prev.filter((b) => b.id !== id));
   };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      // Upload any pending logo files
+      const blobToRemote = new Map<string, string>();
+      const uploads = Array.from(pendingFiles.current.entries()).map(
+        async ([blobUrl, file]) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("slug", slug);
+          const res = await fetch(CONTENT_API_ROUTES.upload, {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) throw new Error("Failed to upload logo");
+          const { url } = await res.json();
+          blobToRemote.set(blobUrl, url);
+          URL.revokeObjectURL(blobUrl);
+        }
+      );
+      await Promise.all(uploads);
+      pendingFiles.current.clear();
+
+      // Replace blob URLs with remote URLs in brands
+      const finalBrands = brands.map((brand) => ({
+        ...brand,
+        logoUrl: blobToRemote.get(brand.logoUrl) ?? brand.logoUrl,
+      }));
+
+      // Save brands and label in parallel
+      const [brandsRes, labelRes] = await Promise.all([
+        fetch(CONTENT_API_ROUTES.settings(slug), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brands: finalBrands }),
+        }),
+        label !== initialLabel
+          ? fetch(API_ROUTES.update(routeId), {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ label }),
+            })
+          : Promise.resolve({ ok: true }),
+      ]);
+
+      if (!brandsRes.ok) throw new Error("Failed to save brands");
+      if (!labelRes.ok) throw new Error("Failed to update label");
+
+      setBrands(finalBrands);
+      onSaved(finalBrands, label);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const hasChanges =
+    label !== initialLabel ||
+    JSON.stringify(brands) !== JSON.stringify(initialBrands);
+
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+
+  const stableSave = useCallback(() => handleSaveRef.current(), []);
+
+  useEffect(() => {
+    onStateChange?.({ hasChanges, saving, save: stableSave });
+  }, [hasChanges, saving, onStateChange, stableSave]);
 
   const inputClass =
     "bg-transparent border border-zinc-800 rounded px-3 py-2 text-white text-sm font-mono outline-none caret-white placeholder:text-zinc-700";
 
   return (
-    <div className="flex flex-col gap-5">
+    <fieldset disabled={saving} className="flex flex-col gap-5 disabled:opacity-50 disabled:pointer-events-none">
+      {/* Route label */}
+      <div className="flex flex-col gap-2">
+        <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+          Route Label
+        </span>
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          className={inputClass}
+          placeholder="Route label"
+        />
+      </div>
+
+      {/* Existing brands */}
       {brands.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 border-t border-zinc-800 pt-4">
           <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
             Brands
           </span>
@@ -134,6 +241,7 @@ export default function ProjectSettingsForm({
         </div>
       )}
 
+      {/* Add brand */}
       <div className="flex flex-col gap-3 border-t border-zinc-800 pt-4">
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
@@ -179,7 +287,7 @@ export default function ProjectSettingsForm({
           </div>
         ) : (
           <form
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onAddBrand)}
             className="flex flex-col gap-3"
           >
             <div className="flex items-center gap-3">
@@ -246,6 +354,11 @@ export default function ProjectSettingsForm({
           </form>
         )}
       </div>
-    </div>
+
+      {/* Error */}
+      {error && (
+        <span className="text-red-500 text-[10px]">{error}</span>
+      )}
+    </fieldset>
   );
 }

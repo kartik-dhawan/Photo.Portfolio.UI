@@ -164,7 +164,7 @@ function ModalPortal({
 
         {/* Footer */}
         {(customFooter || okButtonProps || cancelButtonProps) && (
-          <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-zinc-800">
+          <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-800">
             {customFooter ?? (
               <>
                 {cancelButtonProps && (
@@ -190,7 +190,7 @@ function ModalButton({
   ...rest
 }: ButtonProps & { variant: "ok" | "cancel" }) {
   const base =
-    "text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-colors cursor-pointer font-mono";
+    "text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-colors cursor-pointer font-mono disabled:opacity-40 disabled:cursor-default";
   const styles =
     variant === "ok"
       ? "text-white border border-zinc-700 hover:border-zinc-500"

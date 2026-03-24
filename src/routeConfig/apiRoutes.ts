@@ -12,6 +12,7 @@ const CONTENT_BASE = "/api/content";
 export const CONTENT_API_ROUTES = {
   get: (slug: string) => `${CONTENT_BASE}/${slug}`,
   save: (slug: string) => `${CONTENT_BASE}/${slug}`,
+  settings: (slug: string) => `${CONTENT_BASE}/${slug}/settings`,
   upload: `${CONTENT_BASE}/upload`,
   deleteMedia: `${CONTENT_BASE}/delete-media`,
   allBrands: `${CONTENT_BASE}/brands`,

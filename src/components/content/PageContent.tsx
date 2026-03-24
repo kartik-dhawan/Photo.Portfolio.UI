@@ -9,7 +9,6 @@ import {
   deleteMedia,
   setDraft,
   clearDraft,
-  setDraftBrands,
   addBlock,
   updateBlock,
   removeBlock,
@@ -18,6 +17,7 @@ import {
   BlockType,
   Brand,
 } from "@/store/content";
+import { updateNavItem } from "@/store/nav";
 import { useModal } from "@/components/common/useModal";
 import BrandAvatar from "@/components/common/BrandAvatar";
 import BlockRenderer from "./BlockRenderer";
@@ -33,18 +33,23 @@ export default function PageContent({ slug }: { slug: string }) {
   const dispatch = useAppDispatch();
   const { isAdmin } = useAppSelector((s) => s.auth);
   const { items: navItems } = useAppSelector((s) => s.nav);
-  const { pages, drafts, draftBrands, loading, saving, error } = useAppSelector(
+  const { pages, drafts, loading, saving, error } = useAppSelector(
     (s) => s.content
   );
 
-  const pageLabel = navItems.find(
-    (item) => item.route === `/${slug}`
-  )?.label;
+  const navItem = navItems.find((item) => item.route === `/${slug}`);
+  const pageLabel = navItem?.label;
+  const routeId = navItem?.id ?? "";
   const [editing, setEditing] = useState(false);
 
   const [settingsModal, renderSettingsModal] = useModal({
     title: "Project Settings",
   });
+  const [settingsState, setSettingsState] = useState<{
+    hasChanges: boolean;
+    saving: boolean;
+    save: () => Promise<void>;
+  }>({ hasChanges: false, saving: false, save: async () => {} });
 
   // Map blob URLs to their File objects for deferred upload
   const pendingFiles = useRef<Map<string, File>>(new Map());
@@ -60,13 +65,10 @@ export default function PageContent({ slug }: { slug: string }) {
   const page = pages[slug];
   const draftBlockList = drafts[slug];
   const blocks = editing && draftBlockList ? draftBlockList : page?.blocks ?? [];
-  const brands = editing && draftBrands[slug]
-    ? draftBrands[slug]
-    : page?.brands ?? [];
+  const brands = page?.brands ?? [];
 
   const handleEdit = () => {
     dispatch(setDraft({ slug, blocks: page?.blocks ?? [] }));
-    dispatch(setDraftBrands({ slug, brands: page?.brands ?? [] }));
     pendingFiles.current.clear();
     removedBlobs.current.clear();
     removedRemoteUrls.current = [];
@@ -113,18 +115,11 @@ export default function PageContent({ slug }: { slug: string }) {
       };
     });
 
-    // Replace blob URLs in brands with remote URLs
-    const currentBrands = draftBrands[slug] ?? page?.brands ?? [];
-    const finalBrands = currentBrands.map((brand) => ({
-      ...brand,
-      logoUrl: blobToRemote.get(brand.logoUrl) ?? brand.logoUrl,
-    }));
-
     await dispatch(
       savePageContent({
         slug,
         blocks: finalBlocks,
-        brands: finalBrands,
+        brands,
       })
     );
     pendingFiles.current.clear();
@@ -183,8 +178,14 @@ export default function PageContent({ slug }: { slug: string }) {
     dispatch(reorderBlocks({ slug, fromIndex: index, toIndex: index + 1 }));
   };
 
-  const handleBrandsChange = (newBrands: Brand[]) => {
-    dispatch(setDraftBrands({ slug, brands: newBrands }));
+  const handleSettingsSaved = (newBrands: Brand[], newLabel: string) => {
+    // Refresh page content to reflect new brands
+    dispatch(fetchPageContent(slug));
+    // Update nav item label in redux if changed
+    if (newLabel !== pageLabel) {
+      dispatch(updateNavItem({ id: routeId, data: { label: newLabel } }));
+    }
+    settingsModal.close();
   };
 
   if (loading) {
@@ -222,7 +223,7 @@ export default function PageContent({ slug }: { slug: string }) {
               <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
                 {pageLabel}
               </h1>
-              {isAdmin && editing && (
+              {isAdmin && (
                 <button
                   onClick={() => settingsModal.open()}
                   className="text-zinc-600 hover:text-white transition-colors cursor-pointer"
@@ -369,16 +370,22 @@ export default function PageContent({ slug }: { slug: string }) {
       {renderSettingsModal(
         <ProjectSettingsForm
           slug={slug}
-          brands={draftBrands[slug] ?? []}
-          onChange={handleBrandsChange}
-          onFileAdd={handleFileAdd}
-          onFileRemove={handleFileRemove}
+          routeId={routeId}
+          initialLabel={typeof pageLabel === "string" ? pageLabel : ""}
+          initialBrands={brands}
+          onSaved={handleSettingsSaved}
+          onStateChange={setSettingsState}
         />,
         {
           size: "md",
           cancelButtonProps: {
             label: "Close",
             onClick: () => settingsModal.close(),
+          },
+          okButtonProps: {
+            label: settingsState.saving ? "Saving..." : "Save",
+            disabled: !settingsState.hasChanges || settingsState.saving,
+            onClick: () => settingsState.save(),
           },
         }
       )}
