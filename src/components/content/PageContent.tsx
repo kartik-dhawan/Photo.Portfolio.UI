@@ -1,0 +1,374 @@
+"use client";
+
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useAppSelector, useAppDispatch } from "@/store";
+import {
+  fetchPageContent,
+  savePageContent,
+  uploadMedia,
+  deleteMedia,
+  setDraft,
+  clearDraft,
+  setDraftBrands,
+  addBlock,
+  updateBlock,
+  removeBlock,
+  reorderBlocks,
+  ContentBlock,
+  BlockType,
+  Brand,
+} from "@/store/content";
+import { useModal } from "@/components/common/useModal";
+import BrandAvatar from "@/components/common/BrandAvatar";
+import BlockRenderer from "./BlockRenderer";
+import RichTextEditor from "./RichTextEditor";
+import ImageBlockEditor from "./ImageBlockEditor";
+import YouTubeBlockEditor from "./YouTubeBlockEditor";
+import BlockWrapper from "./BlockWrapper";
+import AddBlockButton from "./AddBlockButton";
+import ProjectSettingsForm from "@/components/forms/project-settings/ProjectSettingsForm";
+
+export default function PageContent({ slug }: { slug: string }) {
+  const dispatch = useAppDispatch();
+  const { isAdmin } = useAppSelector((s) => s.auth);
+  const { items: navItems } = useAppSelector((s) => s.nav);
+  const { pages, drafts, draftBrands, loading, saving, error } = useAppSelector(
+    (s) => s.content
+  );
+
+  const pageLabel = navItems.find(
+    (item) => item.route === `/${slug}`
+  )?.label;
+  const [editing, setEditing] = useState(false);
+
+  const [settingsModal, renderSettingsModal] = useModal({
+    title: "Project Settings",
+  });
+
+  // Map blob URLs to their File objects for deferred upload
+  const pendingFiles = useRef<Map<string, File>>(new Map());
+  // Track blob URLs that were removed so we don't upload them
+  const removedBlobs = useRef<Set<string>>(new Set());
+  // Track remote URLs that were removed so we delete them on save
+  const removedRemoteUrls = useRef<string[]>([]);
+
+  useEffect(() => {
+    dispatch(fetchPageContent(slug));
+  }, [dispatch, slug]);
+
+  const page = pages[slug];
+  const draftBlockList = drafts[slug];
+  const blocks = editing && draftBlockList ? draftBlockList : page?.blocks ?? [];
+  const brands = editing && draftBrands[slug]
+    ? draftBrands[slug]
+    : page?.brands ?? [];
+
+  const handleEdit = () => {
+    dispatch(setDraft({ slug, blocks: page?.blocks ?? [] }));
+    dispatch(setDraftBrands({ slug, brands: page?.brands ?? [] }));
+    pendingFiles.current.clear();
+    removedBlobs.current.clear();
+    removedRemoteUrls.current = [];
+    setEditing(true);
+  };
+
+  const handleCancel = () => {
+    pendingFiles.current.forEach((_, blobUrl) => URL.revokeObjectURL(blobUrl));
+    pendingFiles.current.clear();
+    removedBlobs.current.clear();
+    removedRemoteUrls.current = [];
+    dispatch(clearDraft(slug));
+    setEditing(false);
+  };
+
+  const handleSave = async () => {
+    if (!draftBlockList) return;
+
+    if (removedRemoteUrls.current.length) {
+      await dispatch(deleteMedia(removedRemoteUrls.current));
+    }
+
+    const blobToRemote = new Map<string, string>();
+    const uploads = Array.from(pendingFiles.current.entries())
+      .filter(([blobUrl]) => !removedBlobs.current.has(blobUrl))
+      .map(async ([blobUrl, file]) => {
+        const result = await dispatch(
+          uploadMedia({ slug, file })
+        ).unwrap();
+        blobToRemote.set(blobUrl, result.url);
+        URL.revokeObjectURL(blobUrl);
+      });
+
+    await Promise.all(uploads);
+
+    const finalBlocks = draftBlockList.map((block) => {
+      if (block.type !== "image" || !block.media?.length) return block;
+      return {
+        ...block,
+        media: block.media.map((m) => ({
+          ...m,
+          url: blobToRemote.get(m.url) ?? m.url,
+        })),
+      };
+    });
+
+    // Replace blob URLs in brands with remote URLs
+    const currentBrands = draftBrands[slug] ?? page?.brands ?? [];
+    const finalBrands = currentBrands.map((brand) => ({
+      ...brand,
+      logoUrl: blobToRemote.get(brand.logoUrl) ?? brand.logoUrl,
+    }));
+
+    await dispatch(
+      savePageContent({
+        slug,
+        blocks: finalBlocks,
+        brands: finalBrands,
+      })
+    );
+    pendingFiles.current.clear();
+    removedBlobs.current.clear();
+    removedRemoteUrls.current = [];
+    setEditing(false);
+  };
+
+  const handleFileAdd = useCallback((blobUrl: string, file: File) => {
+    pendingFiles.current.set(blobUrl, file);
+  }, []);
+
+  const handleFileRemove = useCallback((url: string) => {
+    if (pendingFiles.current.has(url)) {
+      pendingFiles.current.delete(url);
+      removedBlobs.current.add(url);
+      URL.revokeObjectURL(url);
+    } else if (url.startsWith("http")) {
+      removedRemoteUrls.current.push(url);
+    }
+  }, []);
+
+  const handleAddBlock = (type: BlockType) => {
+    const defaults: Partial<ContentBlock> =
+      type === "image"
+        ? { layout: "full", media: [] }
+        : type === "youtube"
+          ? { layout: "full", media: [] }
+          : { markdown: "" };
+    const block: ContentBlock = {
+      id: crypto.randomUUID(),
+      type,
+      order: blocks.length,
+      ...defaults,
+    };
+    dispatch(addBlock({ slug, block }));
+  };
+
+  const handleUpdateBlock = (blockId: string, data: Partial<ContentBlock>) => {
+    dispatch(updateBlock({ slug, blockId, data }));
+  };
+
+  const handleRemoveBlock = (blockId: string) => {
+    const block = blocks.find((b) => b.id === blockId);
+    if (block?.type === "image" && block.media) {
+      block.media.forEach((m) => handleFileRemove(m.url));
+    }
+    dispatch(removeBlock({ slug, blockId }));
+  };
+
+  const handleMoveUp = (index: number) => {
+    dispatch(reorderBlocks({ slug, fromIndex: index, toIndex: index - 1 }));
+  };
+
+  const handleMoveDown = (index: number) => {
+    dispatch(reorderBlocks({ slug, fromIndex: index, toIndex: index + 1 }));
+  };
+
+  const handleBrandsChange = (newBrands: Brand[]) => {
+    dispatch(setDraftBrands({ slug, brands: newBrands }));
+  };
+
+  if (loading) {
+    return (
+      <p className="text-zinc-600 text-sm text-center py-20">Loading...</p>
+    );
+  }
+
+  return (
+    <div className="relative flex flex-col gap-6 w-full px-6 xl:px-24">
+      {saving && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <p className="text-white text-sm font-mono uppercase tracking-wider">
+            Saving...
+          </p>
+        </div>
+      )}
+
+      {pageLabel && (
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
+                {pageLabel}
+              </h1>
+              {isAdmin && editing && (
+                <button
+                  onClick={() => settingsModal.open()}
+                  className="text-zinc-600 hover:text-white transition-colors cursor-pointer"
+                  title="Project Settings"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            {brands.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-wider">
+                  Brands:
+                </span>
+                {brands.map((brand) => {
+                  const avatar = (
+                    <div className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer" title={brand.name}>
+                      <BrandAvatar brand={brand} />
+                    </div>
+                  );
+                  return brand.socialUrl ? (
+                    <a
+                      key={brand.id}
+                      href={brand.socialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {avatar}
+                    </a>
+                  ) : (
+                    <div key={brand.id}>{avatar}</div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          {page?.createdAt && (
+            <p className="text-zinc-600 text-[10px] font-mono mt-1">
+              Published{" "}
+              {new Date(page.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          )}
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="flex items-center gap-3">
+          {editing ? (
+            <>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="text-[10px] uppercase tracking-wider text-zinc-400 hover:text-white border border-zinc-800 rounded px-3 py-1 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleCancel}
+                className="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleEdit}
+              className="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-pointer"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+      )}
+
+      {error && <p className="text-red-500 text-[10px]">{error}</p>}
+
+      {blocks.length === 0 && !editing && (
+        <p className="text-zinc-700 text-sm text-center py-20">
+          No content yet
+        </p>
+      )}
+
+      <div className="flex flex-col gap-4">
+        {blocks.map((block, index) =>
+          editing ? (
+            <BlockWrapper
+              key={block.id}
+              index={index}
+              total={blocks.length}
+              onMoveUp={() => handleMoveUp(index)}
+              onMoveDown={() => handleMoveDown(index)}
+              onDelete={() => handleRemoveBlock(block.id)}
+            >
+              {block.type === "image" ? (
+                <ImageBlockEditor
+                  block={block}
+                  slug={slug}
+                  brands={brands}
+                  onChange={(data) => handleUpdateBlock(block.id, data)}
+                  onFileAdd={handleFileAdd}
+                  onFileRemove={handleFileRemove}
+                />
+              ) : block.type === "youtube" ? (
+                <YouTubeBlockEditor
+                  block={block}
+                  brands={brands}
+                  onChange={(data) => handleUpdateBlock(block.id, data)}
+                />
+              ) : block.type === "spacer" ? (
+                <div className="flex items-center justify-center h-8 text-zinc-700 text-[10px] uppercase tracking-wider border border-dashed border-zinc-800 rounded">
+                  Spacer — 32px
+                </div>
+              ) : (
+                <RichTextEditor
+                  block={block}
+                  onChange={(data) => handleUpdateBlock(block.id, data)}
+                />
+              )}
+            </BlockWrapper>
+          ) : (
+            <BlockRenderer key={block.id} block={block} brands={brands} />
+          )
+        )}
+      </div>
+
+      {editing && <AddBlockButton onAdd={handleAddBlock} />}
+
+      {renderSettingsModal(
+        <ProjectSettingsForm
+          slug={slug}
+          brands={draftBrands[slug] ?? []}
+          onChange={handleBrandsChange}
+          onFileAdd={handleFileAdd}
+          onFileRemove={handleFileRemove}
+        />,
+        {
+          size: "md",
+          cancelButtonProps: {
+            label: "Close",
+            onClick: () => settingsModal.close(),
+          },
+        }
+      )}
+    </div>
+  );
+}
