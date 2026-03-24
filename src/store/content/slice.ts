@@ -41,26 +41,36 @@ export const uploadMedia = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const { getSupabaseClient } = await import("@/supabase/client");
-      const supabase = getSupabaseClient();
-      const ext = file.name.split(".").pop() || "bin";
-      const path = `${slug}/${Date.now()}.${ext}`;
+      // 1. Get a signed upload URL from the server (small JSON request)
+      const res = await fetch(CONTENT_API_ROUTES.upload, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug,
+          fileName: file.name,
+          contentType: file.type,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        return rejectWithValue(body.error || "Failed to get upload URL");
+      }
+      const { signedUrl, token, publicUrl, type } = await res.json();
 
-      const { error: uploadError } = await supabase.storage
-        .from("photo-portfolio")
-        .upload(path, file, { contentType: file.type, upsert: false });
+      // 2. Upload directly to Supabase using the signed URL
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+          "x-upsert": "false",
+        },
+        body: file,
+      });
+      if (!uploadRes.ok) {
+        return rejectWithValue("Failed to upload file");
+      }
 
-      if (uploadError) return rejectWithValue(uploadError.message);
-
-      const { data } = supabase.storage
-        .from("photo-portfolio")
-        .getPublicUrl(path);
-
-      const mediaType: "image" | "video" = file.type.startsWith("video/")
-        ? "video"
-        : "image";
-
-      return { url: data.publicUrl, type: mediaType };
+      return { url: publicUrl, type: type as "image" | "video" };
     } catch (err) {
       return rejectWithValue(
         err instanceof Error ? err.message : "Failed to upload file"
@@ -103,6 +113,22 @@ const contentSlice = createSlice({
       action: PayloadAction<{ slug: string; brands: Brand[] }>
     ) {
       state.draftBrands[action.payload.slug] = action.payload.brands;
+    },
+    updateSettings(
+      state,
+      action: PayloadAction<{
+        slug: string;
+        brands: Brand[];
+        tags: string[];
+        filmedAt: string;
+      }>
+    ) {
+      const { slug, brands, tags, filmedAt } = action.payload;
+      if (state.pages[slug]) {
+        state.pages[slug].brands = brands;
+        state.pages[slug].tags = tags;
+        state.pages[slug].filmedAt = filmedAt;
+      }
     },
     addBlock(
       state,
@@ -196,6 +222,7 @@ export const {
   setDraft,
   clearDraft,
   setDraftBrands,
+  updateSettings,
   addBlock,
   updateBlock,
   removeBlock,

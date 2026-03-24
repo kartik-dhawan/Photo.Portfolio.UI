@@ -11,6 +11,7 @@ export {
   removeBlock,
   reorderBlocks,
   setDraftBrands,
+  updateSettings,
 } from "./slice";
 export type {
   ContentState,

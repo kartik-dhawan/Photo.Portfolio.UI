@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useAppSelector, useAppDispatch } from "@/store";
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useAppSelector, useAppDispatch } from '@/store';
 import {
   fetchPageContent,
   savePageContent,
@@ -13,21 +13,22 @@ import {
   updateBlock,
   removeBlock,
   reorderBlocks,
+  updateSettings,
   ContentBlock,
   BlockType,
   Brand,
-} from "@/store/content";
-import { updateNavItem } from "@/store/nav";
-import { useModal } from "@/components/common/useModal";
-import BrandAvatar from "@/components/common/BrandAvatar";
-import BlockRenderer from "./BlockRenderer";
-import RichTextEditor from "./RichTextEditor";
-import ImageBlockEditor from "./ImageBlockEditor";
-import YouTubeBlockEditor from "./YouTubeBlockEditor";
-import BlockWrapper from "./BlockWrapper";
-import AddBlockButton from "./AddBlockButton";
-import ProjectSettingsForm from "@/components/forms/project-settings/ProjectSettingsForm";
-import Skeleton from "@/components/common/Skeleton";
+} from '@/store/content';
+import { updateNavItem } from '@/store/nav';
+import { useModal } from '@/components/common/useModal';
+import BrandAvatar from '@/components/common/BrandAvatar';
+import BlockRenderer from './BlockRenderer';
+import RichTextEditor from './RichTextEditor';
+import ImageBlockEditor from './ImageBlockEditor';
+import YouTubeBlockEditor from './YouTubeBlockEditor';
+import BlockWrapper from './BlockWrapper';
+import AddBlockButton from './AddBlockButton';
+import ProjectSettingsForm from '@/components/forms/project-settings/ProjectSettingsForm';
+import Skeleton from '@/components/common/Skeleton';
 
 export default function PageContent({ slug }: { slug: string }) {
   const dispatch = useAppDispatch();
@@ -39,11 +40,12 @@ export default function PageContent({ slug }: { slug: string }) {
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
   const pageLabel = navItem?.label;
-  const routeId = navItem?.id ?? "";
+  const routeId = navItem?.id ?? '';
   const [editing, setEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [settingsModal, renderSettingsModal] = useModal({
-    title: "Project Settings",
+    title: 'Project Settings',
   });
   const [settingsState, setSettingsState] = useState<{
     hasChanges: boolean;
@@ -64,10 +66,11 @@ export default function PageContent({ slug }: { slug: string }) {
 
   const page = pages[slug];
   const draftBlockList = drafts[slug];
-  const blocks = editing && draftBlockList ? draftBlockList : page?.blocks ?? [];
+  const blocks =
+    editing && draftBlockList ? draftBlockList : page?.blocks ?? [];
   const brands = page?.brands ?? [];
   const tags = page?.tags ?? [];
-  const filmedAt = page?.filmedAt ?? "";
+  const filmedAt = page?.filmedAt ?? '';
 
   const handleEdit = () => {
     dispatch(setDraft({ slug, blocks: page?.blocks ?? [] }));
@@ -87,7 +90,8 @@ export default function PageContent({ slug }: { slug: string }) {
   };
 
   const handleSave = async () => {
-    if (!draftBlockList) return;
+    if (!draftBlockList || isSaving) return;
+    setIsSaving(true);
 
     if (removedRemoteUrls.current.length) {
       await dispatch(deleteMedia(removedRemoteUrls.current));
@@ -97,9 +101,7 @@ export default function PageContent({ slug }: { slug: string }) {
     const uploads = Array.from(pendingFiles.current.entries())
       .filter(([blobUrl]) => !removedBlobs.current.has(blobUrl))
       .map(async ([blobUrl, file]) => {
-        const result = await dispatch(
-          uploadMedia({ slug, file })
-        ).unwrap();
+        const result = await dispatch(uploadMedia({ slug, file })).unwrap();
         blobToRemote.set(blobUrl, result.url);
         URL.revokeObjectURL(blobUrl);
       });
@@ -107,7 +109,7 @@ export default function PageContent({ slug }: { slug: string }) {
     await Promise.all(uploads);
 
     const finalBlocks = draftBlockList.map((block) => {
-      if (block.type !== "image" || !block.media?.length) return block;
+      if (block.type !== 'image' || !block.media?.length) return block;
       return {
         ...block,
         media: block.media.map((m) => ({
@@ -127,6 +129,7 @@ export default function PageContent({ slug }: { slug: string }) {
     pendingFiles.current.clear();
     removedBlobs.current.clear();
     removedRemoteUrls.current = [];
+    setIsSaving(false);
     setEditing(false);
   };
 
@@ -139,18 +142,18 @@ export default function PageContent({ slug }: { slug: string }) {
       pendingFiles.current.delete(url);
       removedBlobs.current.add(url);
       URL.revokeObjectURL(url);
-    } else if (url.startsWith("http")) {
+    } else if (url.startsWith('http')) {
       removedRemoteUrls.current.push(url);
     }
   }, []);
 
   const handleAddBlock = (type: BlockType) => {
     const defaults: Partial<ContentBlock> =
-      type === "image"
-        ? { layout: "full", media: [] }
-        : type === "youtube"
-          ? { layout: "full", media: [] }
-          : { markdown: "" };
+      type === 'image'
+        ? { layout: 'full', media: [] }
+        : type === 'youtube'
+        ? { layout: 'full', media: [] }
+        : { markdown: '' };
     const block: ContentBlock = {
       id: crypto.randomUUID(),
       type,
@@ -166,7 +169,7 @@ export default function PageContent({ slug }: { slug: string }) {
 
   const handleRemoveBlock = (blockId: string) => {
     const block = blocks.find((b) => b.id === blockId);
-    if (block?.type === "image" && block.media) {
+    if (block?.type === 'image' && block.media) {
       block.media.forEach((m) => handleFileRemove(m.url));
     }
     dispatch(removeBlock({ slug, blockId }));
@@ -180,10 +183,20 @@ export default function PageContent({ slug }: { slug: string }) {
     dispatch(reorderBlocks({ slug, fromIndex: index, toIndex: index + 1 }));
   };
 
-  const handleSettingsSaved = (newBrands: Brand[], newLabel: string, _newTags: string[], _newFilmedAt: string) => {
-    // Refresh page content to reflect new brands
-    dispatch(fetchPageContent(slug));
-    // Update nav item label in redux if changed
+  const handleSettingsSaved = (
+    newBrands: Brand[],
+    newLabel: string,
+    newTags: string[],
+    newFilmedAt: string
+  ) => {
+    dispatch(
+      updateSettings({
+        slug,
+        brands: newBrands,
+        tags: newTags,
+        filmedAt: newFilmedAt,
+      })
+    );
     if (newLabel !== pageLabel) {
       dispatch(updateNavItem({ id: routeId, data: { label: newLabel } }));
     }
@@ -210,7 +223,7 @@ export default function PageContent({ slug }: { slug: string }) {
 
   return (
     <div className="relative flex flex-col gap-6 w-full px-3 md:px-6 xl:px-24">
-      {saving && (
+      {isSaving && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
           <p className="text-white text-sm font-mono uppercase tracking-wider">
             Saving...
@@ -254,7 +267,10 @@ export default function PageContent({ slug }: { slug: string }) {
                 </span>
                 {brands.map((brand) => {
                   const avatar = (
-                    <div className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer" title={brand.name}>
+                    <div
+                      className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                      title={brand.name}
+                    >
                       <BrandAvatar brand={brand} />
                     </div>
                   );
@@ -276,11 +292,11 @@ export default function PageContent({ slug }: { slug: string }) {
           </div>
           {filmedAt && (
             <p className="text-zinc-600 text-[10px] xl:text-xs font-mono mt-1">
-              Filmed{" "}
-              {new Date(filmedAt + "T00:00:00").toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
+              Filmed{' '}
+              {new Date(filmedAt + 'T00:00:00').toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
               })}
             </p>
           )}
@@ -305,7 +321,7 @@ export default function PageContent({ slug }: { slug: string }) {
             <>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={isSaving}
                 className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-400 hover:text-white border border-zinc-800 rounded px-3 py-1 transition-colors cursor-pointer disabled:opacity-50"
               >
                 Save
@@ -347,7 +363,7 @@ export default function PageContent({ slug }: { slug: string }) {
               onMoveDown={() => handleMoveDown(index)}
               onDelete={() => handleRemoveBlock(block.id)}
             >
-              {block.type === "image" ? (
+              {block.type === 'image' ? (
                 <ImageBlockEditor
                   block={block}
                   slug={slug}
@@ -356,13 +372,13 @@ export default function PageContent({ slug }: { slug: string }) {
                   onFileAdd={handleFileAdd}
                   onFileRemove={handleFileRemove}
                 />
-              ) : block.type === "youtube" ? (
+              ) : block.type === 'youtube' ? (
                 <YouTubeBlockEditor
                   block={block}
                   brands={brands}
                   onChange={(data) => handleUpdateBlock(block.id, data)}
                 />
-              ) : block.type === "spacer" ? (
+              ) : block.type === 'spacer' ? (
                 <div className="flex items-center justify-center h-8 text-zinc-700 text-[10px] xl:text-xs uppercase tracking-wider border border-dashed border-zinc-800 rounded">
                   Spacer — 32px
                 </div>
@@ -385,7 +401,7 @@ export default function PageContent({ slug }: { slug: string }) {
         <ProjectSettingsForm
           slug={slug}
           routeId={routeId}
-          initialLabel={typeof pageLabel === "string" ? pageLabel : ""}
+          initialLabel={typeof pageLabel === 'string' ? pageLabel : ''}
           initialBrands={brands}
           initialTags={tags}
           initialFilmedAt={filmedAt}
@@ -393,13 +409,13 @@ export default function PageContent({ slug }: { slug: string }) {
           onStateChange={setSettingsState}
         />,
         {
-          size: "md",
+          size: 'md',
           cancelButtonProps: {
-            label: "Close",
+            label: 'Close',
             onClick: () => settingsModal.close(),
           },
           okButtonProps: {
-            label: settingsState.saving ? "Saving..." : "Save",
+            label: settingsState.saving ? 'Saving...' : 'Save',
             disabled: !settingsState.hasChanges || settingsState.saving,
             onClick: () => settingsState.save(),
           },

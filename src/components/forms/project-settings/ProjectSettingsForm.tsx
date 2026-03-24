@@ -207,27 +207,32 @@ export default function ProjectSettingsForm({
     try {
       const values = getValues();
 
-      // Upload pending logo files directly to Supabase
-      const { getSupabaseClient } = await import('@/supabase/client');
-      const supabase = getSupabaseClient();
+      // Get signed URLs from server, upload directly to Supabase
       const blobToRemote = new Map<string, string>();
       const uploads = Array.from(pendingFiles.current.entries()).map(
         async ([blobUrl, file]) => {
-          const ext = file.name.split('.').pop() || 'bin';
-          const path = `${slug}/${Date.now()}-${Math.random()
-            .toString(36)
-            .slice(2, 6)}.${ext}`;
-          const { error } = await supabase.storage
-            .from('photo-portfolio')
-            .upload(path, file, { contentType: file.type, upsert: false });
-          if (error) throw new Error('Failed to upload logo');
-          const { data } = supabase.storage
-            .from('photo-portfolio')
-            .getPublicUrl(path);
-          blobToRemote.set(blobUrl, data.publicUrl);
+          const res = await fetch(CONTENT_API_ROUTES.upload, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug,
+              fileName: file.name,
+              contentType: file.type,
+            }),
+          });
+          if (!res.ok) throw new Error('Failed to get upload URL');
+          const { signedUrl, publicUrl } = await res.json();
+          const uploadRes = await fetch(signedUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type, 'x-upsert': 'false' },
+            body: file,
+          });
+          if (!uploadRes.ok) throw new Error('Failed to upload logo');
+          blobToRemote.set(blobUrl, publicUrl);
           URL.revokeObjectURL(blobUrl);
         }
       );
+
       await Promise.all(uploads);
       pendingFiles.current.clear();
 
@@ -266,6 +271,7 @@ export default function ProjectSettingsForm({
 
       onSaved(finalBrands, values.label!, finalTags, filmedAt);
     } catch (err) {
+      setSaving(false);
       setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
       setSaving(false);
