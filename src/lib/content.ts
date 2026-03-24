@@ -31,20 +31,22 @@ export async function savePageContent(
   });
 }
 
-export async function updatePageBrands(
+export async function updatePageSettings(
   slug: string,
-  brands: Brand[]
+  settings: { brands: Brand[]; tags: string[]; filmedAt: string }
 ): Promise<void> {
   const db = getAdminDb();
   const ref = db.collection(COLLECTION).doc(slug);
   const existing = await ref.get();
   if (existing.exists) {
-    await ref.update({ brands });
+    await ref.update({ brands: settings.brands, tags: settings.tags, filmedAt: settings.filmedAt });
   } else {
     await ref.set({
       slug,
       blocks: [],
-      brands,
+      brands: settings.brands,
+      tags: settings.tags,
+      filmedAt: settings.filmedAt,
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     });

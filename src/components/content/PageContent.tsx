@@ -66,6 +66,8 @@ export default function PageContent({ slug }: { slug: string }) {
   const draftBlockList = drafts[slug];
   const blocks = editing && draftBlockList ? draftBlockList : page?.blocks ?? [];
   const brands = page?.brands ?? [];
+  const tags = page?.tags ?? [];
+  const filmedAt = page?.filmedAt ?? "";
 
   const handleEdit = () => {
     dispatch(setDraft({ slug, blocks: page?.blocks ?? [] }));
@@ -178,7 +180,7 @@ export default function PageContent({ slug }: { slug: string }) {
     dispatch(reorderBlocks({ slug, fromIndex: index, toIndex: index + 1 }));
   };
 
-  const handleSettingsSaved = (newBrands: Brand[], newLabel: string) => {
+  const handleSettingsSaved = (newBrands: Brand[], newLabel: string, _newTags: string[], _newFilmedAt: string) => {
     // Refresh page content to reflect new brands
     dispatch(fetchPageContent(slug));
     // Update nav item label in redux if changed
@@ -247,7 +249,7 @@ export default function PageContent({ slug }: { slug: string }) {
             </div>
             {brands.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-wider">
+                <span className="text-zinc-600 text-[10px] xl:text-xs font-mono uppercase tracking-wider">
                   Brands:
                 </span>
                 {brands.map((brand) => {
@@ -272,15 +274,27 @@ export default function PageContent({ slug }: { slug: string }) {
               </div>
             )}
           </div>
-          {page?.createdAt && (
-            <p className="text-zinc-600 text-[10px] font-mono mt-1">
-              Published{" "}
-              {new Date(page.createdAt).toLocaleDateString("en-US", {
+          {filmedAt && (
+            <p className="text-zinc-600 text-[10px] xl:text-xs font-mono mt-1">
+              Filmed{" "}
+              {new Date(filmedAt + "T00:00:00").toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
               })}
             </p>
+          )}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[10px] xl:text-xs font-mono text-zinc-300 bg-zinc-800/50 border border-zinc-700 rounded px-2 py-0.5"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -292,13 +306,13 @@ export default function PageContent({ slug }: { slug: string }) {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="text-[10px] uppercase tracking-wider text-zinc-400 hover:text-white border border-zinc-800 rounded px-3 py-1 transition-colors cursor-pointer disabled:opacity-50"
+                className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-400 hover:text-white border border-zinc-800 rounded px-3 py-1 transition-colors cursor-pointer disabled:opacity-50"
               >
                 Save
               </button>
               <button
                 onClick={handleCancel}
-                className="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-red-400 transition-colors cursor-pointer"
+                className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-600 hover:text-red-400 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -306,7 +320,7 @@ export default function PageContent({ slug }: { slug: string }) {
           ) : (
             <button
               onClick={handleEdit}
-              className="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-pointer"
+              className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-pointer"
             >
               Edit
             </button>
@@ -314,7 +328,7 @@ export default function PageContent({ slug }: { slug: string }) {
         </div>
       )}
 
-      {error && <p className="text-red-500 text-[10px]">{error}</p>}
+      {error && <p className="text-red-500 text-[10px] xl:text-xs">{error}</p>}
 
       {blocks.length === 0 && !editing && (
         <p className="text-zinc-700 text-sm text-center py-20">
@@ -349,7 +363,7 @@ export default function PageContent({ slug }: { slug: string }) {
                   onChange={(data) => handleUpdateBlock(block.id, data)}
                 />
               ) : block.type === "spacer" ? (
-                <div className="flex items-center justify-center h-8 text-zinc-700 text-[10px] uppercase tracking-wider border border-dashed border-zinc-800 rounded">
+                <div className="flex items-center justify-center h-8 text-zinc-700 text-[10px] xl:text-xs uppercase tracking-wider border border-dashed border-zinc-800 rounded">
                   Spacer — 32px
                 </div>
               ) : (
@@ -373,6 +387,8 @@ export default function PageContent({ slug }: { slug: string }) {
           routeId={routeId}
           initialLabel={typeof pageLabel === "string" ? pageLabel : ""}
           initialBrands={brands}
+          initialTags={tags}
+          initialFilmedAt={filmedAt}
           onSaved={handleSettingsSaved}
           onStateChange={setSettingsState}
         />,

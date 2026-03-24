@@ -80,7 +80,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     key={item.id}
                     href={item.route}
                     onClick={onNavigate}
-                    className="block uppercase tracking-wider text-white text-xs font-bold leading-tight"
+                    className="block uppercase tracking-wider text-white text-xs xl:text-sm font-bold leading-tight"
                   >
                     {item.label}
                   </Link>

@@ -1,4 +1,4 @@
-import { updatePageBrands } from "@/lib/content";
+import { updatePageSettings } from "@/lib/content";
 
 export async function PATCH(
   request: Request,
@@ -6,8 +6,8 @@ export async function PATCH(
 ) {
   try {
     const { slug } = await params;
-    const { brands } = await request.json();
-    await updatePageBrands(slug, brands);
+    const { brands, tags, filmedAt } = await request.json();
+    await updatePageSettings(slug, { brands, tags, filmedAt: filmedAt ?? "" });
     return Response.json({ success: true });
   } catch (err: unknown) {
     const message =

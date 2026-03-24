@@ -32,6 +32,8 @@ export interface PageContent {
   slug: string;
   blocks: ContentBlock[];
   brands?: Brand[];
+  tags?: string[];
+  filmedAt?: string;
   updatedAt: string;
   createdAt: string;
 }
