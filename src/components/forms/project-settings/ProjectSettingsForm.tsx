@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import BrandAvatar from "@/components/common/BrandAvatar";
-import { Brand } from "@/store/content";
-import { CONTENT_API_ROUTES, API_ROUTES } from "@/routeConfig/apiRoutes";
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import BrandAvatar from '@/components/common/BrandAvatar';
+import { Brand } from '@/store/content';
+import { CONTENT_API_ROUTES, API_ROUTES } from '@/routeConfig/apiRoutes';
 import {
   projectSettingsSchema,
   ProjectSettingsFormValues,
   addBrandSchema,
   AddBrandFormValues,
-} from "./schema";
+} from './schema';
 
 interface ExistingBrand extends Brand {
   projectSlug: string;
@@ -25,7 +25,12 @@ interface Props {
   initialBrands: Brand[];
   initialTags: string[];
   initialFilmedAt: string;
-  onSaved: (brands: Brand[], label: string, tags: string[], filmedAt: string) => void;
+  onSaved: (
+    brands: Brand[],
+    label: string,
+    tags: string[],
+    filmedAt: string
+  ) => void;
   onStateChange?: (state: {
     hasChanges: boolean;
     saving: boolean;
@@ -44,13 +49,13 @@ export default function ProjectSettingsForm({
   onStateChange,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [logoPreview, setLogoPreview] = useState("");
-  const [mode, setMode] = useState<"new" | "existing">("new");
+  const [logoPreview, setLogoPreview] = useState('');
+  const [mode, setMode] = useState<'new' | 'existing'>('new');
   const [allBrands, setAllBrands] = useState<ExistingBrand[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(false);
-  const [tagInput, setTagInput] = useState("");
+  const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const pendingFiles = useRef<Map<string, File>>(new Map());
 
   // Main settings form
@@ -80,21 +85,21 @@ export default function ProjectSettingsForm({
     fields: brandFields,
     append: appendBrand,
     remove: removeBrand,
-  } = useFieldArray({ control, name: "brands" });
+  } = useFieldArray({ control, name: 'brands' });
 
   const {
     fields: tagFields,
     append: appendTag,
     remove: removeTag,
-  } = useFieldArray({ control, name: "tags" });
+  } = useFieldArray({ control, name: 'tags' });
 
   // Watch brands for the "pick existing" dedup
-  const watchedBrands = useWatch({ control, name: "brands" });
+  const watchedBrands = useWatch({ control, name: 'brands' });
 
   // Add brand sub-form
   const addBrandForm = useForm<AddBrandFormValues>({
     resolver: yupResolver(addBrandSchema),
-    defaultValues: { name: "", socialUrl: "", review: "" },
+    defaultValues: { name: '', socialUrl: '', review: '' },
   });
 
   // Fetch existing brands
@@ -109,9 +114,14 @@ export default function ProjectSettingsForm({
   }, []);
 
   // Sync when parent data actually changes (not on every render)
-  const prevInitialRef = useRef("");
+  const prevInitialRef = useRef('');
   useEffect(() => {
-    const key = JSON.stringify({ initialLabel, initialBrands, initialTags, initialFilmedAt });
+    const key = JSON.stringify({
+      initialLabel,
+      initialBrands,
+      initialTags,
+      initialFilmedAt,
+    });
     if (key === prevInitialRef.current) return;
     prevInitialRef.current = key;
     resetMain({
@@ -149,19 +159,19 @@ export default function ProjectSettingsForm({
     const blobUrl = URL.createObjectURL(file);
     pendingFiles.current.set(blobUrl, file);
     setLogoPreview(blobUrl);
-    e.target.value = "";
+    e.target.value = '';
   };
 
   const onAddBrand = (data: AddBrandFormValues) => {
     appendBrand({
       id: crypto.randomUUID(),
       name: data.name,
-      logoUrl: logoPreview || "",
+      logoUrl: logoPreview || '',
       socialUrl: data.socialUrl || undefined,
       review: data.review || undefined,
     });
     addBrandForm.reset();
-    setLogoPreview("");
+    setLogoPreview('');
   };
 
   const handlePickExisting = (existing: ExistingBrand) => {
@@ -170,7 +180,7 @@ export default function ProjectSettingsForm({
       name: existing.name,
       logoUrl: existing.logoUrl,
       socialUrl: existing.socialUrl,
-      review: "",
+      review: '',
     });
   };
 
@@ -187,30 +197,34 @@ export default function ProjectSettingsForm({
     const value = tagInput.trim();
     if (value && !tagFields.some((t) => t.value === value)) {
       appendTag({ value });
-      setTagInput("");
+      setTagInput('');
     }
   };
 
   const handleSave = async () => {
     setSaving(true);
-    setError("");
+    setError('');
     try {
       const values = getValues();
 
-      // Upload pending logo files
+      // Upload pending logo files directly to Supabase
+      const { getSupabaseClient } = await import('@/supabase/client');
+      const supabase = getSupabaseClient();
       const blobToRemote = new Map<string, string>();
       const uploads = Array.from(pendingFiles.current.entries()).map(
         async ([blobUrl, file]) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("slug", slug);
-          const res = await fetch(CONTENT_API_ROUTES.upload, {
-            method: "POST",
-            body: formData,
-          });
-          if (!res.ok) throw new Error("Failed to upload logo");
-          const { url } = await res.json();
-          blobToRemote.set(blobUrl, url);
+          const ext = file.name.split('.').pop() || 'bin';
+          const path = `${slug}/${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2, 6)}.${ext}`;
+          const { error } = await supabase.storage
+            .from('photo-portfolio')
+            .upload(path, file, { contentType: file.type, upsert: false });
+          if (error) throw new Error('Failed to upload logo');
+          const { data } = supabase.storage
+            .from('photo-portfolio')
+            .getPublicUrl(path);
+          blobToRemote.set(blobUrl, data.publicUrl);
           URL.revokeObjectURL(blobUrl);
         }
       );
@@ -220,35 +234,39 @@ export default function ProjectSettingsForm({
       const finalBrands: Brand[] = (values.brands ?? []).map((b) => ({
         id: b.id!,
         name: b.name!,
-        logoUrl: blobToRemote.get(b.logoUrl ?? "") ?? b.logoUrl ?? "",
+        logoUrl: blobToRemote.get(b.logoUrl ?? '') ?? b.logoUrl ?? '',
         socialUrl: b.socialUrl || undefined,
         review: b.review || undefined,
       }));
 
       const finalTags = (values.tags ?? []).map((t) => t.value!);
-      const filmedAt = values.filmedAt ?? "";
+      const filmedAt = values.filmedAt ?? '';
 
       const [settingsRes, labelRes] = await Promise.all([
         fetch(CONTENT_API_ROUTES.settings(slug), {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brands: finalBrands, tags: finalTags, filmedAt }),
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brands: finalBrands,
+            tags: finalTags,
+            filmedAt,
+          }),
         }),
         values.label !== initialLabel
           ? fetch(API_ROUTES.update(routeId), {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ label: values.label }),
             })
           : Promise.resolve({ ok: true }),
       ]);
 
-      if (!settingsRes.ok) throw new Error("Failed to save settings");
-      if (!labelRes.ok) throw new Error("Failed to update label");
+      if (!settingsRes.ok) throw new Error('Failed to save settings');
+      if (!labelRes.ok) throw new Error('Failed to update label');
 
       onSaved(finalBrands, values.label!, finalTags, filmedAt);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
       setSaving(false);
     }
@@ -264,7 +282,7 @@ export default function ProjectSettingsForm({
   }, [isDirty, saving, onStateChange, stableSave]);
 
   const inputClass =
-    "bg-transparent border border-zinc-800 rounded px-3 py-2 text-white text-sm font-mono outline-none caret-white placeholder:text-zinc-700";
+    'bg-transparent border border-zinc-800 rounded px-3 py-2 text-white text-sm font-mono outline-none caret-white placeholder:text-zinc-700';
 
   return (
     <fieldset
@@ -277,7 +295,7 @@ export default function ProjectSettingsForm({
           Route Label
         </span>
         <input
-          {...register("label")}
+          {...register('label')}
           type="text"
           className={inputClass}
           placeholder="Route label"
@@ -290,7 +308,7 @@ export default function ProjectSettingsForm({
           Filmed On
         </span>
         <input
-          {...register("filmedAt")}
+          {...register('filmedAt')}
           type="date"
           className={`${inputClass} [color-scheme:dark]`}
         />
@@ -303,7 +321,7 @@ export default function ProjectSettingsForm({
         </span>
         <div
           className="flex flex-wrap items-center gap-1.5 bg-transparent border border-zinc-800 rounded px-3 py-2 cursor-text"
-          onClick={() => document.getElementById("tag-input")?.focus()}
+          onClick={() => document.getElementById('tag-input')?.focus()}
         >
           {tagFields.map((field, index) => (
             <span
@@ -329,15 +347,17 @@ export default function ProjectSettingsForm({
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === 'Enter') {
                 e.preventDefault();
                 handleAddTag();
               }
-              if (e.key === "Backspace" && !tagInput && tagFields.length > 0) {
+              if (e.key === 'Backspace' && !tagInput && tagFields.length > 0) {
                 removeTag(tagFields.length - 1);
               }
             }}
-            placeholder={tagFields.length === 0 ? "Type a tag and press Enter" : ""}
+            placeholder={
+              tagFields.length === 0 ? 'Type a tag and press Enter' : ''
+            }
             className="bg-transparent text-white text-sm font-mono outline-none caret-white placeholder:text-zinc-700 min-w-[80px] flex-1"
           />
         </div>
@@ -378,14 +398,14 @@ export default function ProjectSettingsForm({
           </span>
           <button
             type="button"
-            onClick={() => setMode(mode === "new" ? "existing" : "new")}
+            onClick={() => setMode(mode === 'new' ? 'existing' : 'new')}
             className="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-zinc-300 font-mono transition-colors cursor-pointer"
           >
-            {mode === "new" ? "Pick existing" : "Create new"}
+            {mode === 'new' ? 'Pick existing' : 'Create new'}
           </button>
         </div>
 
-        {mode === "existing" ? (
+        {mode === 'existing' ? (
           <div className="flex flex-col gap-2">
             {loadingBrands && (
               <span className="text-zinc-600 text-xs font-mono">
@@ -445,7 +465,7 @@ export default function ProjectSettingsForm({
                 className="hidden"
               />
               <input
-                {...addBrandForm.register("name")}
+                {...addBrandForm.register('name')}
                 type="text"
                 placeholder="Brand name"
                 className={`${inputClass} flex-1`}
@@ -458,7 +478,7 @@ export default function ProjectSettingsForm({
             )}
 
             <input
-              {...addBrandForm.register("socialUrl")}
+              {...addBrandForm.register('socialUrl')}
               type="url"
               placeholder="Social URL (optional)"
               className={inputClass}
@@ -470,7 +490,7 @@ export default function ProjectSettingsForm({
             )}
 
             <textarea
-              {...addBrandForm.register("review")}
+              {...addBrandForm.register('review')}
               placeholder="Review (optional)"
               rows={3}
               className={`${inputClass} resize-none`}
@@ -487,9 +507,7 @@ export default function ProjectSettingsForm({
       </div>
 
       {/* Error */}
-      {error && (
-        <span className="text-red-500 text-[10px]">{error}</span>
-      )}
+      {error && <span className="text-red-500 text-[10px]">{error}</span>}
     </fieldset>
   );
 }

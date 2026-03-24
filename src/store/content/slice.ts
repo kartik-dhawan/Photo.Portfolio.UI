@@ -40,18 +40,32 @@ export const uploadMedia = createAsyncThunk(
     { slug, file }: { slug: string; file: File },
     { rejectWithValue }
   ) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("slug", slug);
-    const res = await fetch(CONTENT_API_ROUTES.upload, {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) {
-      const body = await res.json();
-      return rejectWithValue(body.error || "Failed to upload file");
+    try {
+      const { getSupabaseClient } = await import("@/supabase/client");
+      const supabase = getSupabaseClient();
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${slug}/${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("photo-portfolio")
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) return rejectWithValue(uploadError.message);
+
+      const { data } = supabase.storage
+        .from("photo-portfolio")
+        .getPublicUrl(path);
+
+      const mediaType: "image" | "video" = file.type.startsWith("video/")
+        ? "video"
+        : "image";
+
+      return { url: data.publicUrl, type: mediaType };
+    } catch (err) {
+      return rejectWithValue(
+        err instanceof Error ? err.message : "Failed to upload file"
+      );
     }
-    return (await res.json()) as { url: string; type: "image" | "video" };
   }
 );
 
