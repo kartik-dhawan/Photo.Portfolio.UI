@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kartik — Photography & Videography",
+  title: "Kartik Dhawan",
   description: "Photography and videography portfolio by Kartik",
 };
 

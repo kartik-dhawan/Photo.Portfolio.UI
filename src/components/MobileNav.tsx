@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -35,11 +41,13 @@ export default function MobileNav() {
         </button>
       </header>
 
-      {open && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black pt-16 px-6 py-8 overflow-y-auto">
-          <Sidebar onNavigate={() => setOpen(false)} />
-        </div>
-      )}
+      <div
+        className={`md:hidden fixed inset-0 z-40 bg-black pt-16 px-6 py-8 overflow-y-auto transition-opacity duration-200 ${
+          open ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
+      >
+        <Sidebar onNavigate={() => setOpen(false)} />
+      </div>
     </>
   );
 }

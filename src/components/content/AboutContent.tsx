@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
 import BrandAvatar from "@/components/common/BrandAvatar";
+import Skeleton from "@/components/common/Skeleton";
 import { Brand } from "@/store/content";
 
 interface BrandWithProject extends Brand {
@@ -77,6 +78,37 @@ export default function AboutContent() {
           I&apos;m always open to new collaborations — feel free to reach out.
         </p>
       </div>
+
+      {loading && (
+        <div className="flex flex-col gap-6">
+          <Skeleton className="h-3 w-40" />
+          <div className="hidden md:flex flex-col gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-4 md:hidden">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="border border-zinc-800 rounded-lg p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex flex-col gap-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-2 w-16" />
+                  </div>
+                </div>
+                <Skeleton className="h-2 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {!loading && brands.length > 0 && (
         <div className="flex flex-col gap-6">

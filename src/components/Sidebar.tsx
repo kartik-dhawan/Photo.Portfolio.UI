@@ -8,6 +8,7 @@ import { addNavItem, updateNavItem, removeNavItem } from '@/store/nav';
 import { NavItem } from '@/lib/types';
 import { buildRouteConfig } from '@/routeConfig/routeConfig';
 import AddRouteForm from '@/components/forms/route/AddRouteForm';
+import Skeleton from '@/components/common/Skeleton';
 
 function groupBySectionName(items: NavItem[]): [string, NavItem[]][] {
   const map = new Map<string, NavItem[]>();
@@ -50,10 +51,9 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav className="flex flex-col h-full font-mono text-sm">
-      {loading && <span className="text-zinc-500 text-xs">Loading...</span>}
       {error && <span className="text-red-500 text-[10px]">{error}</span>}
 
-      {sections.map(([sectionName, sectionItems], idx) => {
+      {sections.map(([sectionName, sectionItems], idx, arr) => {
         const isTitle = sectionName === '__title__';
         const isFooter = sectionName === '__footer__';
 
@@ -175,6 +175,15 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 </div>
               );
             })}
+
+            {isTitle && loading && (
+              <div className="flex flex-col gap-4 mt-6">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            )}
 
             {idx === addRouteAfterIdx && isAdmin && (
               <>

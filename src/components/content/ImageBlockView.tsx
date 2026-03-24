@@ -30,10 +30,7 @@ export default function ImageBlockView({ block, brands }: Props) {
   return (
     <>
       <div
-        className="grid gap-4"
-        style={{
-          gridTemplateColumns: isHalf ? "1fr 1fr" : "1fr",
-        }}
+        className={`grid gap-4 grid-cols-1 ${isHalf ? "md:grid-cols-2" : ""}`}
       >
         {media.map((item, i) => (
           <div key={i} className="flex flex-col gap-1">
@@ -57,7 +54,7 @@ export default function ImageBlockView({ block, brands }: Props) {
           </div>
         ))}
         {isHalf && media.length === 1 && (
-          <div className="aspect-video max-h-[400px]" />
+          <div className="hidden md:block aspect-video max-h-[400px]" />
         )}
       </div>
 

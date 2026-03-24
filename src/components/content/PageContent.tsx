@@ -27,6 +27,7 @@ import YouTubeBlockEditor from "./YouTubeBlockEditor";
 import BlockWrapper from "./BlockWrapper";
 import AddBlockButton from "./AddBlockButton";
 import ProjectSettingsForm from "@/components/forms/project-settings/ProjectSettingsForm";
+import Skeleton from "@/components/common/Skeleton";
 
 export default function PageContent({ slug }: { slug: string }) {
   const dispatch = useAppDispatch();
@@ -188,7 +189,19 @@ export default function PageContent({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <p className="text-zinc-600 text-sm text-center py-20">Loading...</p>
+      <div className="flex flex-col gap-6 w-full px-6 xl:px-24">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-48" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-6 w-6 rounded-full" />
+          </div>
+        </div>
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
     );
   }
 
