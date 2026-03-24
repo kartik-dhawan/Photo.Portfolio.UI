@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Brand } from "@/store/content";
 
 const COLORS = [
@@ -28,10 +29,23 @@ export default function BrandAvatar({ brand, size = "sm" }: Props) {
   const dim = size === "md" ? "w-10 h-10 text-sm" : "w-6 h-6 text-[10px]";
 
   if (brand.logoUrl) {
+    const px = size === "md" ? 40 : 24;
+    if (brand.logoUrl.startsWith("blob:")) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={brand.logoUrl}
+          alt={brand.name}
+          className={`${dim} rounded-full object-cover`}
+        />
+      );
+    }
     return (
-      <img
+      <Image
         src={brand.logoUrl}
         alt={brand.name}
+        width={px}
+        height={px}
         className={`${dim} rounded-full object-cover`}
       />
     );

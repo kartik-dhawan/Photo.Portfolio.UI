@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ContentBlock, MediaItem, Brand } from "@/store/content";
 import { useModal } from "@/components/common/useModal";
 import MediaCaption from "./MediaCaption";
@@ -41,10 +42,14 @@ export default function ImageBlockView({ block, brands }: Props) {
               {item.type === "video" ? (
                 <VideoPlayer src={item.url} className="w-full h-full" />
               ) : (
-                <img
+                <Image
                   src={item.url}
                   alt={item.title ?? ""}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes={isHalf ? "(max-width: 768px) 100vw, 50vw" : "100vw"}
+                  className="object-cover"
+                  loading="lazy"
+                  quality={80}
                 />
               )}
             </div>
@@ -61,11 +66,17 @@ export default function ImageBlockView({ block, brands }: Props) {
       {renderPreviewModal(
         previewItem && (
           <div className="flex flex-col items-center gap-4">
-            <img
-              src={previewItem.url}
-              alt={previewItem.title ?? ""}
-              className="max-w-full max-h-[70vh] object-contain"
-            />
+            <div className="relative w-full" style={{ maxHeight: "70vh", aspectRatio: "16/9" }}>
+              <Image
+                src={previewItem.url}
+                alt={previewItem.title ?? ""}
+                fill
+                sizes="90vw"
+                className="object-contain"
+                quality={90}
+                priority
+              />
+            </div>
             {(previewItem.title || previewItem.date || previewItem.brandId) && (
               <MediaCaption item={previewItem} brand={getBrand(previewItem)} />
             )}

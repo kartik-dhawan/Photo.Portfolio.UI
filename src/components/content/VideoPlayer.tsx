@@ -32,6 +32,8 @@ export default function VideoPlayer({ src, className = "" }: Props) {
       <video
         ref={videoRef}
         src={src}
+        preload="metadata"
+        playsInline
         controls={playing}
         onPause={handlePause}
         onEnded={handleEnded}

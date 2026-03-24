@@ -200,12 +200,14 @@ const contentSlice = createSlice({
       .addCase(savePageContent.fulfilled, (state, action) => {
         const { slug, blocks, brands } = action.payload;
         const now = new Date().toISOString();
+        const existing = state.pages[slug];
         state.pages[slug] = {
+          ...existing,
           slug,
           blocks,
           brands,
           updatedAt: now,
-          createdAt: state.pages[slug]?.createdAt || now,
+          createdAt: existing?.createdAt || now,
         };
         delete state.drafts[slug];
         delete state.draftBrands[slug];

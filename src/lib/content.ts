@@ -22,13 +22,23 @@ export async function savePageContent(
   const ref = db.collection(COLLECTION).doc(slug);
   const existing = await ref.get();
 
-  await ref.set({
-    slug,
-    blocks,
-    brands: brands ?? [],
-    updatedAt: now,
-    createdAt: existing.exists ? existing.data()!.createdAt : now,
-  });
+  if (existing.exists) {
+    await ref.update({
+      blocks,
+      brands: brands ?? [],
+      updatedAt: now,
+    });
+  } else {
+    await ref.set({
+      slug,
+      blocks,
+      brands: brands ?? [],
+      tags: [],
+      filmedAt: "",
+      updatedAt: now,
+      createdAt: now,
+    });
+  }
 }
 
 export async function updatePageSettings(
