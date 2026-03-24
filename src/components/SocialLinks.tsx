@@ -2,7 +2,7 @@ import { SOCIALS } from "@/lib/socials";
 
 export default function SocialLinks() {
   return (
-    <div className="fixed bottom-6 right-6 z-40 hidden md:flex flex-col gap-3">
+    <div className="fixed bottom-6 right-6 z-40 hidden md:flex flex-col gap-3 items-end">
       {SOCIALS.map((social) => (
         <a
           key={social.name}
@@ -10,8 +10,13 @@ export default function SocialLinks() {
           target="_blank"
           rel="noopener noreferrer"
           title={social.name}
-          className="text-zinc-600 hover:text-white transition-colors"
+          className="group flex items-center gap-2 text-zinc-600 hover:text-white transition-colors"
         >
+          {social.followers && (
+            <span className="text-[10px] font-mono tracking-wider opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200">
+              {social.followers}
+            </span>
+          )}
           <svg
             width="18"
             height="18"

@@ -189,7 +189,7 @@ export default function PageContent({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6 w-full px-6 xl:px-24">
+      <div className="flex flex-col gap-6 w-full px-3 md:px-6 xl:px-24">
         <div className="flex items-center justify-between">
           <Skeleton className="h-7 w-48" />
           <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export default function PageContent({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="relative flex flex-col gap-6 w-full px-6 xl:px-24">
+    <div className="relative flex flex-col gap-6 w-full px-3 md:px-6 xl:px-24">
       {saving && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
           <p className="text-white text-sm font-mono uppercase tracking-wider">

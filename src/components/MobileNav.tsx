@@ -42,8 +42,8 @@ export default function MobileNav() {
       </header>
 
       <div
-        className={`md:hidden fixed inset-0 z-40 bg-black pt-16 px-6 py-8 overflow-y-auto transition-opacity duration-200 ${
-          open ? "opacity-100 visible" : "opacity-0 invisible"
+        className={`md:hidden fixed inset-0 z-40 bg-black pt-16 px-6 py-8 overflow-y-auto transition-all duration-300 ease-out ${
+          open ? "opacity-100 translate-y-0 visible" : "opacity-0 -translate-y-4 invisible"
         }`}
       >
         <Sidebar onNavigate={() => setOpen(false)} />
