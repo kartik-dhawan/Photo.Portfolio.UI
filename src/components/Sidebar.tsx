@@ -104,7 +104,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     {item.label}
                   </Link>
                   {isAdmin && isFirestoreItem && (
-                    <span className="hidden group-hover:flex items-center gap-1 shrink-0">
+                    <span className="flex md:hidden group-hover:flex items-center gap-1 shrink-0">
                       <button
                         onClick={() =>
                           dispatch(

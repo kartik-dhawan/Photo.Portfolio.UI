@@ -153,7 +153,7 @@ function ModalPortal({
           </h2>
           <button
             onClick={handleClose}
-            className="text-zinc-600 hover:text-white transition-colors cursor-pointer text-sm"
+            className="text-zinc-600 hover:text-white transition-colors cursor-pointer text-2xl leading-none px-1"
           >
             &times;
           </button>
