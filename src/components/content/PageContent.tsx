@@ -284,11 +284,12 @@ export default function PageContent({
         </div>
       )}
 
-      <div className="px-2 md:px-0 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none opacity-50">
+      <div className="px-2 md:px-0 relative overflow-hidden border-y border-zinc-800/50 rounded-lg">
+        <div className="absolute inset-0 pointer-events-none">
           <FloatingPaths position={1} />
+          <FloatingPaths position={-1} />
         </div>
-        <div className="relative z-10">
+        <div className="relative z-10 py-3 px-1">
           {pageLabel && (
             <div className="flex flex-col">
               {/* Desktop: title + settings inline, brands on far right */}
