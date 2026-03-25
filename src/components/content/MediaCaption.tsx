@@ -7,44 +7,31 @@ interface Props {
 }
 
 export default function MediaCaption({ item, brand }: Props) {
-  const titleText = item.title ?? "";
+  const parts: string[] = [];
+  if (item.title) parts.push(item.title);
+  if (brand) parts.push(brand.name);
+  if (item.date) parts.push(item.date);
+  if (item.type === "video" && item.duration)
+    parts.push(formatDuration(item.duration));
 
-  const titleEl = item.link ? (
-    <a
-      href={item.link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-zinc-400 hover:text-white text-xs font-mono transition-colors underline underline-offset-2"
-    >
-      {titleText}
-    </a>
-  ) : (
-    <span className="text-zinc-400 text-xs font-mono">{titleText}</span>
-  );
+  if (parts.length === 0) return null;
 
-  const dateParts: string[] = [];
-  if (item.date) dateParts.push(item.date);
-  if (item.type === "video" && item.duration) {
-    dateParts.push(formatDuration(item.duration));
-  }
-  const dateText = dateParts.join(" - ");
+  const caption = parts.join(" — ");
 
   return (
-    <div className="text-center">
-      <div className="flex items-center justify-center gap-2">
-        {titleText && titleEl}
-        {titleText && brand && (
-          <span className="text-zinc-700 text-xs font-mono">-</span>
-        )}
-        {brand && (
-          <span className="text-zinc-500 text-xs font-mono">
-            {brand.name}
-          </span>
-        )}
-      </div>
-      {dateText && (
-        <p className="text-zinc-600 text-[10px] font-mono">{dateText}</p>
+    <p className="text-zinc-400 text-xs font-mono text-center break-words">
+      {item.link ? (
+        <a
+          href={item.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-white transition-colors underline underline-offset-2"
+        >
+          {caption}
+        </a>
+      ) : (
+        caption
       )}
-    </div>
+    </p>
   );
 }
