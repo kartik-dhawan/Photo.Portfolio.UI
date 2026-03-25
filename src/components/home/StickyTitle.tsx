@@ -42,7 +42,7 @@ export default function StickyTitle() {
 
   return (
     <div
-      className={`fixed top-14 md:top-0 left-0 right-0 z-30 flex flex-col items-center py-2 md:py-3 bg-black/80 backdrop-blur-sm border-b border-zinc-900 transition-all duration-300 ${
+      className={`fixed top-14 md:top-0 left-0 md:left-64 right-0 z-30 flex flex-col items-center py-2 md:py-3 bg-black/80 backdrop-blur-sm border-b border-zinc-900 transition-all duration-300 ${
         visible
           ? "opacity-100 translate-y-0"
           : "opacity-0 -translate-y-full pointer-events-none"
