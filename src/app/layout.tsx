@@ -28,12 +28,18 @@ const sarina = Sarina({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kartikdhawan.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Kartik Dhawan",
     template: "%s — Kartik Dhawan",
   },
   description: "Photography and videography portfolio by Kartik Dhawan. Specializing in portraits, brand storytelling, and cinematic video work.",
+  keywords: ["photography", "videography", "portfolio", "Kartik Dhawan", "portraits", "brand storytelling", "cinematic"],
+  authors: [{ name: "Kartik Dhawan" }],
+  creator: "Kartik Dhawan",
   openGraph: {
     type: "website",
     siteName: "Kartik Dhawan",
@@ -41,6 +47,18 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    creator: "@notsothicccc",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
