@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { addRouteSchema, AddRouteFormValues } from "./schema";
 
 interface Props {
-  onAdd: (label: string, sectionName: string) => void;
+  onAdd: (data: AddRouteFormValues) => void;
   onCancel: () => void;
 }
 
@@ -29,7 +29,7 @@ export default function AddRouteForm({ onAdd, onCancel }: Props) {
   }, []);
 
   const onSubmit = (data: AddRouteFormValues) => {
-    onAdd(data.label, data.sectionName);
+    onAdd(data);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -32,15 +32,15 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const routeConfig = buildRouteConfig(visibleItems);
   const sections = groupBySectionName(routeConfig);
 
-  const handleAdd = (label: string, sectionName: string) => {
-    const route = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const handleAdd = (data: { label: string; sectionName: string }) => {
+    const route = data.label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     dispatch(
       addNavItem({
         route: `/${route}`,
-        label,
+        label: data.label,
         hidden: false,
         isNotLink: false,
-        sectionName,
+        sectionName: data.sectionName,
         order: items.length,
       })
     );
