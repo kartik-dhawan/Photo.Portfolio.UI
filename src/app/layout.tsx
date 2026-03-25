@@ -5,6 +5,7 @@ import StoreProvider from "@/store/StoreProvider";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import SocialLinks from "@/components/SocialLinks";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} h-full antialiased`}>
+      <GoogleAnalytics />
       <body className="min-h-full font-mono bg-black text-white">
         <StoreProvider>
           <MobileNav />
