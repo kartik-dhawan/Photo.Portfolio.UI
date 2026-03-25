@@ -21,4 +21,5 @@ export type {
   Brand,
   BlockType,
   ImageLayout,
+  AspectRatio,
 } from "./types";

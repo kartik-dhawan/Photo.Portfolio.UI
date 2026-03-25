@@ -1,17 +1,8 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
 import BrandAvatar from "@/components/common/BrandAvatar";
-import Skeleton from "@/components/common/Skeleton";
 import { Brand } from "@/store/content";
 import { SOCIALS } from "@/lib/socials";
-
-interface BrandWithProject extends Brand {
-  projectSlug: string;
-  projectName: string;
-}
+import { BrandWithProject } from "@/lib/content";
 
 interface GroupedBrand extends Brand {
   projects: { slug: string; name: string }[];
@@ -39,18 +30,12 @@ function groupBrandsByName(brands: BrandWithProject[]): GroupedBrand[] {
   return [...map.values()];
 }
 
-export default function AboutContent() {
-  const [brands, setBrands] = useState<GroupedBrand[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Props {
+  brands: BrandWithProject[];
+}
 
-  useEffect(() => {
-    fetch(CONTENT_API_ROUTES.allBrands)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setBrands(groupBrandsByName(data));
-      })
-      .finally(() => setLoading(false));
-  }, []);
+export default function AboutContent({ brands: rawBrands }: Props) {
+  const brands = groupBrandsByName(rawBrands);
 
   return (
     <div className="flex flex-col gap-12 w-full px-6 xl:px-24">
@@ -80,38 +65,7 @@ export default function AboutContent() {
         </p>
       </div>
 
-      {loading && (
-        <div className="flex flex-col gap-6">
-          <Skeleton className="h-3 w-40" />
-          <div className="hidden md:flex flex-col gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <Skeleton className="h-3 w-28" />
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-4 md:hidden">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="border border-zinc-800 rounded-lg p-4 flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="flex flex-col gap-2">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-2 w-16" />
-                  </div>
-                </div>
-                <Skeleton className="h-2 w-32" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!loading && brands.length > 0 && (
+      {brands.length > 0 && (
         <div className="flex flex-col gap-6">
           <h2 className="text-zinc-400 text-xs font-mono uppercase tracking-wider text-center md:text-left">
             Brands I&apos;ve Worked With

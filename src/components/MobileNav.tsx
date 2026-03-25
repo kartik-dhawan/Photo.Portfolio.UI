@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
+import RouteLoaderIndicator from "./common/RouteLoader";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -15,8 +16,9 @@ export default function MobileNav() {
   return (
     <>
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 bg-black/90 backdrop-blur-sm border-b border-zinc-900">
-        <span className="font-mono text-xs uppercase tracking-wider text-white font-bold">
+        <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-white font-bold">
           Kartik
+          <RouteLoaderIndicator />
         </span>
         <button
           onClick={() => setOpen(!open)}

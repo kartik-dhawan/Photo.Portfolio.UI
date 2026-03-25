@@ -15,6 +15,7 @@ interface Props {
 export default function ImageBlockView({ block, brands }: Props) {
   const media = block.media ?? [];
   const isHalf = block.layout === "half";
+  const ratio = isHalf && block.aspectRatio ? block.aspectRatio : "16/9";
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
 
   const [previewModal, renderPreviewModal] = useModal({ title: "Preview" });
@@ -36,7 +37,8 @@ export default function ImageBlockView({ block, brands }: Props) {
         {media.map((item, i) => (
           <div key={i} className="flex flex-col gap-1">
             <div
-              className={`relative aspect-video overflow-hidden w-full ${isHalf ? "max-h-[400px]" : ""} ${item.type === "image" ? "cursor-pointer" : ""}`}
+              className={`relative overflow-hidden w-full ${""} ${item.type === "image" ? "cursor-pointer" : ""}`}
+              style={{ aspectRatio: ratio }}
               onClick={() => handlePreview(item)}
             >
               {item.type === "video" ? (
@@ -48,8 +50,11 @@ export default function ImageBlockView({ block, brands }: Props) {
                   fill
                   sizes={isHalf ? "(max-width: 768px) 100vw, 50vw" : "100vw"}
                   className="object-cover"
-                  loading="lazy"
+                  loading={i === 0 ? "eager" : "lazy"}
+                  priority={i === 0}
                   quality={80}
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTgxODE4Ii8+PC9zdmc+"
                 />
               )}
             </div>
@@ -59,7 +64,7 @@ export default function ImageBlockView({ block, brands }: Props) {
           </div>
         ))}
         {isHalf && media.length === 1 && (
-          <div className="hidden md:block aspect-video max-h-[400px]" />
+          <div className="hidden md:block" style={{ aspectRatio: ratio }} />
         )}
       </div>
 

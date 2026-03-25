@@ -1,5 +1,6 @@
 export type BlockType = 'image' | 'richtext' | 'spacer' | 'youtube';
 export type ImageLayout = 'full' | 'half';
+export type AspectRatio = '16/9' | '1/1' | '4/5' | '9/16';
 
 export interface MediaItem {
   url: string;
@@ -23,6 +24,7 @@ export interface ContentBlock {
   id: string;
   type: BlockType;
   layout?: ImageLayout;
+  aspectRatio?: AspectRatio;
   media?: MediaItem[];
   markdown?: string;
   order: number;

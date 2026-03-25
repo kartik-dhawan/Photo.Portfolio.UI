@@ -207,7 +207,9 @@ export default function ProjectSettingsForm({
     try {
       const values = getValues();
 
-      // Get signed URLs from server, upload directly to Supabase
+      // Get signed URLs from server, upload via Supabase client
+      const { getSupabaseClient } = await import('@/supabase/client');
+      const supabase = getSupabaseClient();
       const blobToRemote = new Map<string, string>();
       const uploads = Array.from(pendingFiles.current.entries()).map(
         async ([blobUrl, file]) => {
@@ -221,13 +223,14 @@ export default function ProjectSettingsForm({
             }),
           });
           if (!res.ok) throw new Error('Failed to get upload URL');
-          const { signedUrl, publicUrl } = await res.json();
-          const uploadRes = await fetch(signedUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': file.type, 'x-upsert': 'false' },
-            body: file,
-          });
-          if (!uploadRes.ok) throw new Error('Failed to upload logo');
+          const { path, token, publicUrl } = await res.json();
+          const { error } = await supabase.storage
+            .from('photo-portfolio')
+            .uploadToSignedUrl(path, token, file, {
+              contentType: file.type,
+              upsert: false,
+            });
+          if (error) throw new Error('Failed to upload logo');
           blobToRemote.set(blobUrl, publicUrl);
           URL.revokeObjectURL(blobUrl);
         }

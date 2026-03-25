@@ -9,6 +9,7 @@ import { NavItem } from '@/lib/types';
 import { buildRouteConfig } from '@/routeConfig/routeConfig';
 import AddRouteForm from '@/components/forms/route/AddRouteForm';
 import Skeleton from '@/components/common/Skeleton';
+import RouteLoaderIndicator from '@/components/common/RouteLoader';
 
 function groupBySectionName(items: NavItem[]): [string, NavItem[]][] {
   const map = new Map<string, NavItem[]>();
@@ -76,14 +77,16 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
               if (item.id === '__title__') {
                 return (
-                  <Link
-                    key={item.id}
-                    href={item.route}
-                    onClick={onNavigate}
-                    className="block uppercase tracking-wider text-white text-xs xl:text-sm font-bold leading-tight"
-                  >
-                    {item.label}
-                  </Link>
+                  <div key={item.id} className="flex items-start gap-2">
+                    <Link
+                      href={item.route}
+                      onClick={onNavigate}
+                      className="block uppercase tracking-wider text-white text-xs xl:text-sm font-bold leading-tight"
+                    >
+                      {item.label}
+                    </Link>
+                    <RouteLoaderIndicator />
+                  </div>
                 );
               }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { ContentBlock, ImageLayout, MediaItem, Brand } from "@/store/content";
+import { ContentBlock, ImageLayout, AspectRatio, MediaItem, Brand } from "@/store/content";
 import { useModal } from "@/components/common/useModal";
 import MediaMetaForm from "@/components/forms/media-meta/MediaMetaForm";
 import MediaCaption from "./MediaCaption";
@@ -26,7 +26,14 @@ export default function ImageBlockEditor({
   const fileRef = useRef<HTMLInputElement>(null);
   const media = block.media ?? [];
   const layout = block.layout ?? "full";
+  const aspectRatio = block.aspectRatio ?? "16/9";
   const maxMedia = layout === "half" ? 2 : 1;
+  const RATIOS: { value: AspectRatio; label: string }[] = [
+    { value: "16/9", label: "16:9" },
+    { value: "1/1", label: "1:1" },
+    { value: "4/5", label: "4:5" },
+    { value: "9/16", label: "9:16" },
+  ];
   const [metaIndex, setMetaIndex] = useState<number>(-1);
   const metaSaveRef = useRef<(() => void) | null>(null);
 
@@ -91,7 +98,11 @@ export default function ImageBlockEditor({
       onFileRemove(media[1].url);
     }
     const trimmed = next === "full" ? media.slice(0, 1) : media;
-    onChange({ layout: next, media: trimmed });
+    onChange({
+      layout: next,
+      media: trimmed,
+      aspectRatio: next === "full" ? undefined : aspectRatio,
+    });
   };
 
   return (
@@ -103,6 +114,23 @@ export default function ImageBlockEditor({
         >
           Layout: {layout === "full" ? "1fr" : "1fr 1fr"}
         </button>
+        {layout === "half" && (
+          <div className="flex items-center gap-1">
+            {RATIOS.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => onChange({ aspectRatio: r.value })}
+                className={`text-[10px] uppercase tracking-wider transition-colors cursor-pointer border rounded px-2 py-1 ${
+                  aspectRatio === r.value
+                    ? "text-white border-zinc-600"
+                    : "text-zinc-600 border-zinc-800 hover:text-zinc-400"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        )}
         {media.length < maxMedia && (
           <>
             <button
@@ -134,7 +162,8 @@ export default function ImageBlockEditor({
             return (
               <div
                 key={i}
-                className="aspect-video max-h-[400px] border border-dashed border-zinc-800 rounded flex items-center justify-center text-zinc-700 text-xs"
+                className="max-h-[400px] border border-dashed border-zinc-800 rounded flex items-center justify-center text-zinc-700 text-xs"
+                style={{ aspectRatio: layout === "half" ? aspectRatio : "16/9" }}
               >
                 Empty
               </div>
@@ -142,7 +171,10 @@ export default function ImageBlockEditor({
           }
           return (
             <div key={i} className="flex flex-col gap-1">
-              <div className="relative group aspect-video max-h-[400px] overflow-hidden">
+              <div
+                className="relative group overflow-hidden"
+                style={{ aspectRatio: layout === "half" ? aspectRatio : "16/9" }}
+              >
                 {item.type === "video" ? (
                   <video
                     src={item.url}

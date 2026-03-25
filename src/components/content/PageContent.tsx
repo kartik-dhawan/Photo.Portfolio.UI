@@ -29,8 +29,21 @@ import BlockWrapper from './BlockWrapper';
 import AddBlockButton from './AddBlockButton';
 import ProjectSettingsForm from '@/components/forms/project-settings/ProjectSettingsForm';
 import Skeleton from '@/components/common/Skeleton';
+import { PageContent as PageContentType } from '@/store/content/types';
 
-export default function PageContent({ slug }: { slug: string }) {
+interface Props {
+  slug: string;
+  initialContent: PageContentType | null;
+  initialLabel: string;
+  initialRouteId: string;
+}
+
+export default function PageContent({
+  slug,
+  initialContent,
+  initialLabel,
+  initialRouteId,
+}: Props) {
   const dispatch = useAppDispatch();
   const { isAdmin } = useAppSelector((s) => s.auth);
   const { items: navItems } = useAppSelector((s) => s.nav);
@@ -38,9 +51,12 @@ export default function PageContent({ slug }: { slug: string }) {
     (s) => s.content
   );
 
+  // Use redux state if available (after admin edits), otherwise use server-fetched data
+  const page = pages[slug];
   const navItem = navItems.find((item) => item.route === `/${slug}`);
-  const pageLabel = navItem?.label;
-  const routeId = navItem?.id ?? '';
+  const pageLabel = navItem?.label ?? initialLabel;
+  const routeId = navItem?.id ?? initialRouteId;
+
   const [editing, setEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -60,17 +76,24 @@ export default function PageContent({ slug }: { slug: string }) {
   // Track remote URLs that were removed so we delete them on save
   const removedRemoteUrls = useRef<string[]>([]);
 
+  // Hydrate redux from server data on first load; fetch fresh data when admin
+  const hydrated = useRef(false);
   useEffect(() => {
-    dispatch(fetchPageContent(slug));
-  }, [dispatch, slug]);
+    if (isAdmin) {
+      dispatch(fetchPageContent(slug));
+    } else if (!hydrated.current && initialContent) {
+      // For non-admin, no need to re-fetch — server data is fresh
+      hydrated.current = true;
+    }
+  }, [dispatch, slug, isAdmin, initialContent]);
 
-  const page = pages[slug];
+  const effectivePage = page ?? initialContent;
   const draftBlockList = drafts[slug];
   const blocks =
-    editing && draftBlockList ? draftBlockList : page?.blocks ?? [];
-  const brands = page?.brands ?? [];
-  const tags = page?.tags ?? [];
-  const filmedAt = page?.filmedAt ?? '';
+    editing && draftBlockList ? draftBlockList : effectivePage?.blocks ?? [];
+  const brands = effectivePage?.brands ?? [];
+  const tags = effectivePage?.tags ?? [];
+  const filmedAt = effectivePage?.filmedAt ?? '';
 
   const handleEdit = () => {
     dispatch(setDraft({ slug, blocks: page?.blocks ?? [] }));
@@ -203,7 +226,7 @@ export default function PageContent({ slug }: { slug: string }) {
     settingsModal.close();
   };
 
-  if (loading) {
+  if (loading && !effectivePage) {
     return (
       <div className="flex flex-col gap-6 w-full px-3 md:px-6 xl:px-24">
         <div className="flex items-center justify-between">
