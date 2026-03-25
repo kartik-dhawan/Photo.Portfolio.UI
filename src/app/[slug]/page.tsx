@@ -26,7 +26,7 @@ export default async function SectionPage({ params }: PageProps) {
   const navItem = navItems.find((item) => item.route === `/${slug}`);
 
   return (
-    <div className="h-full min-h-[80vh] py-12 px-8">
+    <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
       <PageContent
         slug={slug}
         initialContent={content}

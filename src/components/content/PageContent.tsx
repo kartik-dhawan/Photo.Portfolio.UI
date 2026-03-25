@@ -30,6 +30,7 @@ import AddBlockButton from './AddBlockButton';
 import ProjectSettingsForm from '@/components/forms/project-settings/ProjectSettingsForm';
 import { ProjectSettingsFormValues } from '@/components/forms/project-settings/schema';
 import Skeleton from '@/components/common/Skeleton';
+import FloatingPaths from '@/components/home/FloatingPaths';
 import { PageContent as PageContentType } from '@/store/content/types';
 
 interface Props {
@@ -283,179 +284,189 @@ export default function PageContent({
         </div>
       )}
 
-      {pageLabel && (
-        <div>
-          {/* Desktop: title + settings inline, brands on far right */}
-          <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
-                {pageLabel}
-              </h1>
-              {isAdmin && (
-                <button
-                  onClick={() => settingsModal.open()}
-                  className="text-zinc-600 hover:text-white transition-colors cursor-pointer"
-                  title="Project Settings"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+      <div className="px-2 md:px-0 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-50">
+          <FloatingPaths position={1} />
+        </div>
+        <div className="relative z-10">
+          {pageLabel && (
+            <div className="flex flex-col">
+              {/* Desktop: title + settings inline, brands on far right */}
+              <div className="hidden md:flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
+                    {pageLabel}
+                  </h1>
+                  {isAdmin && (
+                    <button
+                      onClick={() => settingsModal.open()}
+                      className="text-zinc-600 hover:text-white transition-colors cursor-pointer"
+                      title="Project Settings"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {brands.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-600 text-[10px] xl:text-xs font-mono uppercase tracking-wider">
+                      Brands:
+                    </span>
+                    {brands.map((brand) => {
+                      const avatar = (
+                        <div
+                          className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                          title={brand.name}
+                        >
+                          <BrandAvatar brand={brand} />
+                        </div>
+                      );
+                      return brand.socialUrl ? (
+                        <a
+                          key={brand.id}
+                          href={brand.socialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {avatar}
+                        </a>
+                      ) : (
+                        <div key={brand.id}>{avatar}</div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile: title with settings icon space-between */}
+              <div className="flex md:hidden items-start justify-between gap-3 mt-2">
+                <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
+                  {pageLabel}
+                </h1>
+                {isAdmin && (
+                  <button
+                    onClick={() => settingsModal.open()}
+                    className="text-zinc-600 hover:text-white transition-colors cursor-pointer shrink-0 mt-1"
+                    title="Project Settings"
                   >
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                </button>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {filmedAt && (
+                <p className="text-zinc-600 text-[10px] xl:text-xs font-mono">
+                  Filmed{' '}
+                  {new Date(filmedAt + 'T00:00:00').toLocaleDateString(
+                    'en-US',
+                    {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    }
+                  )}
+                </p>
+              )}
+              {brands.length > 0 && (
+                <div className="flex md:hidden items-center gap-2 mt-2">
+                  <span className="text-zinc-600 text-[10px] xl:text-xs font-mono uppercase tracking-wider">
+                    Brands:
+                  </span>
+                  {brands.map((brand) => {
+                    const avatar = (
+                      <div
+                        className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                        title={brand.name}
+                      >
+                        <BrandAvatar brand={brand} />
+                      </div>
+                    );
+                    return brand.socialUrl ? (
+                      <a
+                        key={brand.id}
+                        href={brand.socialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {avatar}
+                      </a>
+                    ) : (
+                      <div key={brand.id}>{avatar}</div>
+                    );
+                  })}
+                </div>
+              )}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[10px] xl:text-xs font-mono text-zinc-300 bg-zinc-800/50 border border-zinc-700 rounded px-2 py-0.5"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {isAdmin && (
+                <div className="flex items-center gap-3 mt-3">
+                  {editing ? (
+                    <>
+                      <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-400 hover:text-white border border-zinc-800 rounded px-3 py-1 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancel}
+                        className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-600 hover:text-red-400 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleEdit}
+                      className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+              )}
+              {error && (
+                <p className="text-red-500 text-[10px] xl:text-xs">{error}</p>
               )}
             </div>
-            {brands.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-zinc-600 text-[10px] xl:text-xs font-mono uppercase tracking-wider">
-                  Brands:
-                </span>
-                {brands.map((brand) => {
-                  const avatar = (
-                    <div
-                      className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
-                      title={brand.name}
-                    >
-                      <BrandAvatar brand={brand} />
-                    </div>
-                  );
-                  return brand.socialUrl ? (
-                    <a
-                      key={brand.id}
-                      href={brand.socialUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {avatar}
-                    </a>
-                  ) : (
-                    <div key={brand.id}>{avatar}</div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Mobile: title with settings icon space-between */}
-          <div className="flex md:hidden items-start justify-between gap-3">
-            <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
-              {pageLabel}
-            </h1>
-            {isAdmin && (
-              <button
-                onClick={() => settingsModal.open()}
-                className="text-zinc-600 hover:text-white transition-colors cursor-pointer shrink-0 mt-1"
-                title="Project Settings"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          {filmedAt && (
-            <p className="text-zinc-600 text-[10px] xl:text-xs font-mono mt-1">
-              Filmed{' '}
-              {new Date(filmedAt + 'T00:00:00').toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
-          )}
-          {brands.length > 0 && (
-            <div className="flex md:hidden items-center gap-2 mt-2">
-              <span className="text-zinc-600 text-[10px] xl:text-xs font-mono uppercase tracking-wider">
-                Brands:
-              </span>
-              {brands.map((brand) => {
-                const avatar = (
-                  <div
-                    className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
-                    title={brand.name}
-                  >
-                    <BrandAvatar brand={brand} />
-                  </div>
-                );
-                return brand.socialUrl ? (
-                  <a
-                    key={brand.id}
-                    href={brand.socialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {avatar}
-                  </a>
-                ) : (
-                  <div key={brand.id}>{avatar}</div>
-                );
-              })}
-            </div>
-          )}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[10px] xl:text-xs font-mono text-zinc-300 bg-zinc-800/50 border border-zinc-700 rounded px-2 py-0.5"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
           )}
         </div>
-      )}
-
-      {isAdmin && (
-        <div className="flex items-center gap-3">
-          {editing ? (
-            <>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-400 hover:text-white border border-zinc-800 rounded px-3 py-1 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleCancel}
-                className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-600 hover:text-red-400 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleEdit}
-              className="text-[10px] xl:text-xs uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-pointer"
-            >
-              Edit
-            </button>
-          )}
-        </div>
-      )}
-
-      {error && <p className="text-red-500 text-[10px] xl:text-xs">{error}</p>}
+      </div>
 
       {blocks.length === 0 && !editing && (
         <p className="text-zinc-700 text-sm text-center py-20">
