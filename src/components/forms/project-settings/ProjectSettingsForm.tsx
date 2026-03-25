@@ -5,7 +5,7 @@ import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import BrandAvatar from '@/components/common/BrandAvatar';
 import { Brand } from '@/store/content';
-import { CONTENT_API_ROUTES, API_ROUTES } from '@/routeConfig/apiRoutes';
+import { useFetchAllBrands, useUpdatePageSettings, useUpdateRouteLabel, useUploadMedia } from '@/hooks';
 import {
   projectSettingsSchema,
   ProjectSettingsFormValues,
@@ -51,12 +51,15 @@ export default function ProjectSettingsForm({
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [mode, setMode] = useState<'new' | 'existing'>('new');
-  const [allBrands, setAllBrands] = useState<ExistingBrand[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const pendingFiles = useRef<Map<string, File>>(new Map());
+
+  const { data: allBrands, loading: loadingBrands } = useFetchAllBrands();
+  const { updateSettings } = useUpdatePageSettings(slug);
+  const { updateLabel } = useUpdateRouteLabel(routeId);
+  const { upload: uploadFile } = useUploadMedia(slug);
 
   // Main settings form
   const {
@@ -101,17 +104,6 @@ export default function ProjectSettingsForm({
     resolver: yupResolver(addBrandSchema),
     defaultValues: { name: '', socialUrl: '', review: '' },
   });
-
-  // Fetch existing brands
-  useEffect(() => {
-    setLoadingBrands(true);
-    fetch(CONTENT_API_ROUTES.allBrands)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setAllBrands(data);
-      })
-      .finally(() => setLoadingBrands(false));
-  }, []);
 
   // Sync when parent data actually changes (not on every render)
   const prevInitialRef = useRef('');
@@ -207,30 +199,11 @@ export default function ProjectSettingsForm({
     try {
       const values = getValues();
 
-      // Get signed URLs from server, upload via Supabase client
-      const { getSupabaseClient } = await import('@/supabase/client');
-      const supabase = getSupabaseClient();
+      // Upload pending logo files
       const blobToRemote = new Map<string, string>();
       const uploads = Array.from(pendingFiles.current.entries()).map(
         async ([blobUrl, file]) => {
-          const res = await fetch(CONTENT_API_ROUTES.upload, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              slug,
-              fileName: file.name,
-              contentType: file.type,
-            }),
-          });
-          if (!res.ok) throw new Error('Failed to get upload URL');
-          const { path, token, publicUrl } = await res.json();
-          const { error } = await supabase.storage
-            .from('photo-portfolio')
-            .uploadToSignedUrl(path, token, file, {
-              contentType: file.type,
-              upsert: false,
-            });
-          if (error) throw new Error('Failed to upload logo');
+          const { publicUrl } = await uploadFile(file);
           blobToRemote.set(blobUrl, publicUrl);
           URL.revokeObjectURL(blobUrl);
         }
@@ -250,27 +223,10 @@ export default function ProjectSettingsForm({
       const finalTags = (values.tags ?? []).map((t) => t.value!);
       const filmedAt = values.filmedAt ?? '';
 
-      const [settingsRes, labelRes] = await Promise.all([
-        fetch(CONTENT_API_ROUTES.settings(slug), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            brands: finalBrands,
-            tags: finalTags,
-            filmedAt,
-          }),
-        }),
-        values.label !== initialLabel
-          ? fetch(API_ROUTES.update(routeId), {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ label: values.label }),
-            })
-          : Promise.resolve({ ok: true }),
+      await Promise.all([
+        updateSettings({ brands: finalBrands, tags: finalTags, filmedAt }),
+        values.label !== initialLabel ? updateLabel(values.label!) : Promise.resolve(),
       ]);
-
-      if (!settingsRes.ok) throw new Error('Failed to save settings');
-      if (!labelRes.ok) throw new Error('Failed to update label');
 
       onSaved(finalBrands, values.label!, finalTags, filmedAt);
     } catch (err) {

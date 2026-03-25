@@ -41,35 +41,9 @@ export const uploadMedia = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // 1. Get signed upload URL + token from server
-      const res = await fetch(CONTENT_API_ROUTES.upload, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug,
-          fileName: file.name,
-          contentType: file.type,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        return rejectWithValue(body.error || "Failed to get upload URL");
-      }
-      const { path, token, publicUrl, type } = await res.json();
-
-      // 2. Upload via Supabase client using the signed token (bypasses RLS, handles large files)
-      const { getSupabaseClient } = await import("@/supabase/client");
-      const supabase = getSupabaseClient();
-      const { error: uploadError } = await supabase.storage
-        .from("photo-portfolio")
-        .uploadToSignedUrl(path, token, file, {
-          contentType: file.type,
-          upsert: false,
-        });
-
-      if (uploadError) return rejectWithValue(uploadError.message);
-
-      return { url: publicUrl, type: type as "image" | "video" };
+      const { uploadToStorage } = await import("@/lib/upload");
+      const { publicUrl, type } = await uploadToStorage(slug, file);
+      return { url: publicUrl, type };
     } catch (err) {
       return rejectWithValue(
         err instanceof Error ? err.message : "Failed to upload file"
