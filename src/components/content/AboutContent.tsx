@@ -6,6 +6,7 @@ import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
 import BrandAvatar from "@/components/common/BrandAvatar";
 import Skeleton from "@/components/common/Skeleton";
 import { Brand } from "@/store/content";
+import { SOCIALS } from "@/lib/socials";
 
 interface BrandWithProject extends Brand {
   projectSlug: string;
@@ -112,7 +113,7 @@ export default function AboutContent() {
 
       {!loading && brands.length > 0 && (
         <div className="flex flex-col gap-6">
-          <h2 className="text-zinc-400 text-xs font-mono uppercase tracking-wider">
+          <h2 className="text-zinc-400 text-xs font-mono uppercase tracking-wider text-center md:text-left">
             Brands I&apos;ve Worked With
           </h2>
           {/* Desktop table */}
@@ -249,6 +250,42 @@ export default function AboutContent() {
           </div>
         </div>
       )}
+      {/* Socials */}
+      <div className="flex flex-col gap-6">
+        <div className="border-t border-zinc-800" />
+        <h2 className="text-zinc-400 text-xs font-mono uppercase tracking-wider text-center md:text-left">
+          Connect
+        </h2>
+        <div className="flex flex-col gap-3">
+          {SOCIALS.map((social) => (
+            <a
+              key={social.name}
+              href={social.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 text-zinc-400 hover:text-white transition-colors group"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="shrink-0"
+              >
+                <path d={social.icon} />
+              </svg>
+              <span className="text-sm font-mono">
+                {social.handle ?? social.name}
+              </span>
+              {social.followers && (
+                <span className="text-zinc-600 text-xs font-mono">
+                  {social.followers}
+                </span>
+              )}
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

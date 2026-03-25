@@ -1,6 +1,13 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { SOCIALS } from "@/lib/socials";
 
 export default function SocialLinks() {
+  const pathname = usePathname();
+
+  if (pathname === "/about") return null;
+
   return (
     <div className="fixed bottom-6 right-6 z-40 hidden md:flex flex-col gap-3 items-end">
       {SOCIALS.map((social) => (
