@@ -29,8 +29,19 @@ const sarina = Sarina({
 });
 
 export const metadata: Metadata = {
-  title: "Kartik Dhawan",
-  description: "Photography and videography portfolio by Kartik",
+  title: {
+    default: "Kartik Dhawan",
+    template: "%s — Kartik Dhawan",
+  },
+  description: "Photography and videography portfolio by Kartik Dhawan. Specializing in portraits, brand storytelling, and cinematic video work.",
+  openGraph: {
+    type: "website",
+    siteName: "Kartik Dhawan",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

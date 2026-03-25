@@ -1,9 +1,19 @@
+import { Metadata } from 'next';
 import { getAllMedia, getProjectCards } from '@/lib/content';
 import FloatingPaths from '@/components/home/FloatingPaths';
 import ScrollToWork from '@/components/home/ScrollToWork';
 import StickyHeader from '@/components/common/StickyHeader';
 import ProjectsGrid from '@/components/content/ProjectsGrid';
 import CollectionsGrid from '@/components/content/CollectionsGrid';
+
+export const metadata: Metadata = {
+  openGraph: {
+    images: [{ url: '/home-meta-image.png', width: 1200, height: 630, alt: 'Kartik Dhawan' }],
+  },
+  twitter: {
+    images: ['/home-meta-image.png'],
+  },
+};
 
 export const revalidate = 60;
 
