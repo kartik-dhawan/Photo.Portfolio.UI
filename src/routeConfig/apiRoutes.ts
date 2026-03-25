@@ -16,4 +16,5 @@ export const CONTENT_API_ROUTES = {
   upload: `${CONTENT_BASE}/upload`,
   deleteMedia: `${CONTENT_BASE}/delete-media`,
   allBrands: `${CONTENT_BASE}/brands`,
+  collections: `${CONTENT_BASE}/collections`,
 } as const;

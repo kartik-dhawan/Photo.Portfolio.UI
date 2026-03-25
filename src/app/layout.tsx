@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Caveat, Sarina } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
 import Sidebar from "@/components/Sidebar";
@@ -17,6 +17,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const caveat = Caveat({
+  variable: "--font-display",
+  subsets: ["latin"],
+});
+
+const sarina = Sarina({
+  variable: "--font-serif",
+  weight: "400",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Kartik Dhawan",
   description: "Photography and videography portfolio by Kartik",
@@ -28,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${caveat.variable} ${sarina.variable} h-full antialiased`}>
       <GoogleAnalytics />
       <body className="min-h-full font-mono bg-black text-white">
         <StoreProvider>

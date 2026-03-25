@@ -28,6 +28,7 @@ import YouTubeBlockEditor from './YouTubeBlockEditor';
 import BlockWrapper from './BlockWrapper';
 import AddBlockButton from './AddBlockButton';
 import ProjectSettingsForm from '@/components/forms/project-settings/ProjectSettingsForm';
+import { ProjectSettingsFormValues } from '@/components/forms/project-settings/schema';
 import Skeleton from '@/components/common/Skeleton';
 import { PageContent as PageContentType } from '@/store/content/types';
 
@@ -206,24 +207,52 @@ export default function PageContent({
     dispatch(reorderBlocks({ slug, fromIndex: index, toIndex: index + 1 }));
   };
 
-  const handleSettingsSaved = (
-    newBrands: Brand[],
-    newLabel: string,
-    newTags: string[],
-    newFilmedAt: string
-  ) => {
+  const handleSettingsSaved = (values: ProjectSettingsFormValues) => {
+    const savedBrands: Brand[] = (values.brands ?? []).map((b) => ({
+      id: b.id!,
+      name: b.name!,
+      logoUrl: b.logoUrl ?? '',
+      socialUrl: b.socialUrl,
+      review: b.review,
+    }));
+    const savedTags = (values.tags ?? []).map((t) => t.value!);
+
     dispatch(
       updateSettings({
         slug,
-        brands: newBrands,
-        tags: newTags,
-        filmedAt: newFilmedAt,
+        brands: savedBrands,
+        tags: savedTags,
+        filmedAt: values.filmedAt ?? '',
       })
     );
-    if (newLabel !== pageLabel) {
-      dispatch(updateNavItem({ id: routeId, data: { label: newLabel } }));
-    }
+
+    dispatch(
+      updateNavItem({
+        id: routeId,
+        data: {
+          label: values.label,
+          pinned: !!values.pinned,
+          hideFromHome: !!values.hideFromHome,
+        },
+      })
+    );
     settingsModal.close();
+  };
+
+  const defaultProjectFormValues: ProjectSettingsFormValues = {
+    label: typeof pageLabel === 'string' ? pageLabel : '',
+    filmedAt: filmedAt,
+    pinned: !!navItem?.pinned,
+    hideFromHome: !!navItem?.hideFromHome,
+    tagInput: '',
+    brands: brands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      logoUrl: b.logoUrl,
+      socialUrl: b.socialUrl,
+      review: b.review,
+    })),
+    tags: tags.map((t) => ({ value: t })),
   };
 
   if (loading && !effectivePage) {
@@ -268,7 +297,16 @@ export default function PageContent({
                   className="text-zinc-600 hover:text-white transition-colors cursor-pointer"
                   title="Project Settings"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
@@ -282,12 +320,22 @@ export default function PageContent({
                 </span>
                 {brands.map((brand) => {
                   const avatar = (
-                    <div className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer" title={brand.name}>
+                    <div
+                      className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                      title={brand.name}
+                    >
                       <BrandAvatar brand={brand} />
                     </div>
                   );
                   return brand.socialUrl ? (
-                    <a key={brand.id} href={brand.socialUrl} target="_blank" rel="noopener noreferrer">{avatar}</a>
+                    <a
+                      key={brand.id}
+                      href={brand.socialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {avatar}
+                    </a>
                   ) : (
                     <div key={brand.id}>{avatar}</div>
                   );
@@ -307,7 +355,16 @@ export default function PageContent({
                 className="text-zinc-600 hover:text-white transition-colors cursor-pointer shrink-0 mt-1"
                 title="Project Settings"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
@@ -332,12 +389,22 @@ export default function PageContent({
               </span>
               {brands.map((brand) => {
                 const avatar = (
-                  <div className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer" title={brand.name}>
+                  <div
+                    className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                    title={brand.name}
+                  >
                     <BrandAvatar brand={brand} />
                   </div>
                 );
                 return brand.socialUrl ? (
-                  <a key={brand.id} href={brand.socialUrl} target="_blank" rel="noopener noreferrer">{avatar}</a>
+                  <a
+                    key={brand.id}
+                    href={brand.socialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {avatar}
+                  </a>
                 ) : (
                   <div key={brand.id}>{avatar}</div>
                 );
@@ -445,10 +512,7 @@ export default function PageContent({
         <ProjectSettingsForm
           slug={slug}
           routeId={routeId}
-          initialLabel={typeof pageLabel === 'string' ? pageLabel : ''}
-          initialBrands={brands}
-          initialTags={tags}
-          initialFilmedAt={filmedAt}
+          defaultValues={defaultProjectFormValues}
           onSaved={handleSettingsSaved}
           onStateChange={setSettingsState}
         />,

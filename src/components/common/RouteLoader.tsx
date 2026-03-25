@@ -7,22 +7,33 @@ export default function RouteLoaderIndicator() {
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const prevPath = useRef(pathname);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      const anchor = (e.target as HTMLElement).closest("a");
-      if (!anchor) return;
-      const href = anchor.getAttribute("href");
-      if (!href || href.startsWith("http") || href.startsWith("#") || href === prevPath.current) return;
-      setLoading(true);
+      // Wait a tick so preventDefault() from buttons has fired
+      setTimeout(() => {
+        if (e.defaultPrevented) return;
+        const anchor = (e.target as HTMLElement).closest("a");
+        if (!anchor) return;
+        // Skip if click was on a button inside the anchor
+        if ((e.target as HTMLElement).closest("button")) return;
+        const href = anchor.getAttribute("href");
+        if (!href || href.startsWith("http") || href.startsWith("#") || href === prevPath.current) return;
+        setLoading(true);
+        // Safety: clear after 3s if pathname never changes
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setLoading(false), 3000);
+      }, 0);
     };
-    document.addEventListener("click", handleClick, true);
-    return () => document.removeEventListener("click", handleClick, true);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, []);
 
   useEffect(() => {
     prevPath.current = pathname;
     setLoading(false);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
   }, [pathname]);
 
   if (!loading) return null;

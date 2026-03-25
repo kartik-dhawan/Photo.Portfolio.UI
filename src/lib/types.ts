@@ -8,6 +8,8 @@ export interface NavItem {
   isNotLink: boolean;
   sectionName: string;
   order: number;
+  pinned?: boolean;
+  hideFromHome?: boolean;
 }
 
 export type FirestoreNavItem = Omit<NavItem, "label"> & { label: string };

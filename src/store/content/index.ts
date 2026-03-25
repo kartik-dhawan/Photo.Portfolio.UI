@@ -22,4 +22,6 @@ export type {
   BlockType,
   ImageLayout,
   AspectRatio,
+  CollectionItem,
+  CollectionsResponse,
 } from "./types";

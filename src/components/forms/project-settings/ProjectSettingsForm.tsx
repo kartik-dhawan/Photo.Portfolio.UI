@@ -21,16 +21,8 @@ interface ExistingBrand extends Brand {
 interface Props {
   slug: string;
   routeId: string;
-  initialLabel: string;
-  initialBrands: Brand[];
-  initialTags: string[];
-  initialFilmedAt: string;
-  onSaved: (
-    brands: Brand[],
-    label: string,
-    tags: string[],
-    filmedAt: string
-  ) => void;
+  defaultValues: ProjectSettingsFormValues;
+  onSaved: (values: ProjectSettingsFormValues) => void;
   onStateChange?: (state: {
     hasChanges: boolean;
     saving: boolean;
@@ -41,10 +33,7 @@ interface Props {
 export default function ProjectSettingsForm({
   slug,
   routeId,
-  initialLabel,
-  initialBrands,
-  initialTags,
-  initialFilmedAt,
+  defaultValues: initialValues,
   onSaved,
   onStateChange,
 }: Props) {
@@ -56,7 +45,7 @@ export default function ProjectSettingsForm({
 
   const { data: allBrands, loading: loadingBrands } = useFetchAllBrands();
   const { updateSettings } = useUpdatePageSettings(slug);
-  const { updateLabel } = useUpdateRouteLabel(routeId);
+  const { updateRoute } = useUpdateRouteLabel(routeId);
   const { upload: uploadFile } = useUploadMedia(slug);
 
   // Main settings form
@@ -70,19 +59,7 @@ export default function ProjectSettingsForm({
     formState: { isDirty },
   } = useForm<ProjectSettingsFormValues>({
     resolver: yupResolver(projectSettingsSchema),
-    defaultValues: {
-      label: initialLabel,
-      filmedAt: initialFilmedAt,
-      tagInput: '',
-      brands: initialBrands.map((b) => ({
-        id: b.id,
-        name: b.name,
-        logoUrl: b.logoUrl,
-        socialUrl: b.socialUrl,
-        review: b.review,
-      })),
-      tags: initialTags.map((t) => ({ value: t })),
-    },
+    defaultValues: initialValues,
   });
 
   const tagInput = watch('tagInput');
@@ -113,28 +90,11 @@ export default function ProjectSettingsForm({
   // Sync when parent data actually changes (not on every render)
   const prevInitialRef = useRef('');
   useEffect(() => {
-    const key = JSON.stringify({
-      initialLabel,
-      initialBrands,
-      initialTags,
-      initialFilmedAt,
-    });
+    const key = JSON.stringify(initialValues);
     if (key === prevInitialRef.current) return;
     prevInitialRef.current = key;
-    resetMain({
-      label: initialLabel,
-      filmedAt: initialFilmedAt,
-      tagInput: '',
-      brands: initialBrands.map((b) => ({
-        id: b.id,
-        name: b.name,
-        logoUrl: b.logoUrl,
-        socialUrl: b.socialUrl,
-        review: b.review,
-      })),
-      tags: initialTags.map((t) => ({ value: t })),
-    });
-  }, [initialLabel, initialBrands, initialTags, initialFilmedAt, resetMain]);
+    resetMain(initialValues);
+  }, [initialValues, resetMain]);
 
   // Dedup existing brands
   const addedNames = new Set(
@@ -228,12 +188,27 @@ export default function ProjectSettingsForm({
       const finalTags = (values.tags ?? []).map((t) => t.value!);
       const filmedAt = values.filmedAt ?? '';
 
+      const routeData: Record<string, unknown> = {};
+      if (values.label !== initialValues.label) routeData.label = values.label;
+      if (values.pinned !== initialValues.pinned) routeData.pinned = !!values.pinned;
+      if (values.hideFromHome !== initialValues.hideFromHome) routeData.hideFromHome = !!values.hideFromHome;
+
       await Promise.all([
         updateSettings({ brands: finalBrands, tags: finalTags, filmedAt }),
-        values.label !== initialLabel ? updateLabel(values.label!) : Promise.resolve(),
+        Object.keys(routeData).length > 0 ? updateRoute(routeData) : Promise.resolve(),
       ]);
 
-      onSaved(finalBrands, values.label!, finalTags, filmedAt);
+      onSaved({
+        ...values,
+        brands: finalBrands.map((b) => ({
+          id: b.id,
+          name: b.name,
+          logoUrl: b.logoUrl,
+          socialUrl: b.socialUrl,
+          review: b.review,
+        })),
+        tags: finalTags.map((t) => ({ value: t })),
+      });
     } catch (err) {
       setSaving(false);
       setError(err instanceof Error ? err.message : 'Failed to save');
@@ -270,6 +245,38 @@ export default function ProjectSettingsForm({
           className={inputClass}
           placeholder="Route label"
         />
+      </div>
+
+      {/* Visibility toggles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-zinc-800 pt-4">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            {...register('pinned', {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                if (e.target.checked) setValue('hideFromHome', false);
+              },
+            })}
+            type="checkbox"
+            className="w-4 h-4 accent-white cursor-pointer shrink-0"
+          />
+          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+            Pin to top of home
+          </span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            {...register('hideFromHome', {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                if (e.target.checked) setValue('pinned', false);
+              },
+            })}
+            type="checkbox"
+            className="w-4 h-4 accent-white cursor-pointer shrink-0"
+          />
+          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+            Hide from home page
+          </span>
+        </label>
       </div>
 
       {/* Filmed date */}

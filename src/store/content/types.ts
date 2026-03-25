@@ -40,6 +40,22 @@ export interface PageContent {
   createdAt: string;
 }
 
+export interface CollectionItem {
+  url: string;
+  title?: string;
+  date?: string;
+  projectSlug: string;
+  projectName: string;
+}
+
+export interface CollectionsResponse {
+  items: CollectionItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
 export interface ContentState {
   pages: Record<string, PageContent>;
   drafts: Record<string, ContentBlock[]>;
