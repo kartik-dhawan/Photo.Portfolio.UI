@@ -28,7 +28,9 @@ const sarina = Sarina({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kartikdhawan.com";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://kartikdhawan.com");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
