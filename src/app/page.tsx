@@ -1,7 +1,7 @@
 import { getAllMedia, getProjectCards } from '@/lib/content';
 import FloatingPaths from '@/components/home/FloatingPaths';
 import ScrollToWork from '@/components/home/ScrollToWork';
-import StickyTitle from '@/components/home/StickyTitle';
+import StickyHeader from '@/components/common/StickyHeader';
 import ProjectsGrid from '@/components/content/ProjectsGrid';
 import CollectionsGrid from '@/components/content/CollectionsGrid';
 
@@ -17,7 +17,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col">
-      <StickyTitle />
+      <StickyHeader title="Making intentions meet cinema" />
       <div className="relative flex flex-col min-h-[80vh] overflow-hidden px-6 md:px-8 pt-12 md:pt-20">
         <div className="absolute inset-0">
           <FloatingPaths position={1} />

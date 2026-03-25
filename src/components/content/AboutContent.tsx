@@ -1,9 +1,9 @@
-import Link from "next/link";
-import BrandAvatar from "@/components/common/BrandAvatar";
-import ProfilePhoto from "@/components/ProfilePhoto";
-import { Brand } from "@/store/content";
-import { SOCIALS } from "@/lib/socials";
-import { BrandWithProject } from "@/lib/content";
+import Link from 'next/link';
+import BrandAvatar from '@/components/common/BrandAvatar';
+import ProfilePhoto from '@/components/ProfilePhoto';
+import { Brand } from '@/store/content';
+import { SOCIALS } from '@/lib/socials';
+import { BrandWithProject } from '@/lib/content';
 
 interface GroupedBrand extends Brand {
   projects: { slug: string; name: string }[];
@@ -36,54 +36,24 @@ interface Props {
   profilePhotoUrl: string;
 }
 
-export default function AboutContent({ brands: rawBrands, profilePhotoUrl }: Props) {
+export default function AboutContent({
+  brands: rawBrands,
+  profilePhotoUrl,
+}: Props) {
   const brands = groupBrandsByName(rawBrands);
 
   return (
     <div className="flex flex-col gap-12 w-full px-6 xl:px-24">
-      {/* Mobile: photo on top */}
-      <div className="md:hidden">
-        <ProfilePhoto initialUrl={profilePhotoUrl} />
-      </div>
+      <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
+        About
+      </h1>
 
-      {/* Desktop: title above, then 2fr text | 1fr photo */}
-      <div className="hidden md:block">
-        <h1 className="text-white text-2xl font-mono uppercase tracking-wider mb-8">
-          About
-        </h1>
-        <div className="grid grid-cols-2 gap-8">
-          <div className="flex flex-col gap-6 font-[family-name:var(--font-geist-sans)]">
-            <p className="text-zinc-300 text-sm leading-relaxed">
-              I&apos;m Kartik Dhawan — a photographer and videographer based in
-              India. I specialize in portraits, brand storytelling, and cinematic
-              video work. My approach is rooted in natural light, honest moments,
-              and a minimal aesthetic.
-            </p>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Over the years, I&apos;ve had the opportunity to collaborate with
-              incredible brands and individuals, capturing everything from intimate
-              portraits to large-scale commercial projects. Every project is a new
-              story, and I believe in letting the subject speak for itself.
-            </p>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              When I&apos;m not behind the camera, you&apos;ll find me exploring
-              new cities, curating playlists, or working on personal film projects.
-              I&apos;m always open to new collaborations — feel free to reach out.
-            </p>
-          </div>
-          <div className="flex justify-end">
-            <div className="w-2/3">
-              <ProfilePhoto initialUrl={profilePhotoUrl} />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Mobile/tablet portrait: photo first, text second */}
+        <div className="lg:hidden">
+          <ProfilePhoto initialUrl={profilePhotoUrl} />
         </div>
-      </div>
 
-      {/* Mobile: text below photo */}
-      <div className="flex flex-col gap-6 md:hidden">
-        <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
-          About
-        </h1>
         <div className="flex flex-col gap-6 font-[family-name:var(--font-geist-sans)]">
           <p className="text-zinc-300 text-sm leading-relaxed">
             I&apos;m Kartik Dhawan — a photographer and videographer based in
@@ -93,15 +63,23 @@ export default function AboutContent({ brands: rawBrands, profilePhotoUrl }: Pro
           </p>
           <p className="text-zinc-400 text-sm leading-relaxed">
             Over the years, I&apos;ve had the opportunity to collaborate with
-            incredible brands and individuals, capturing everything from intimate
-            portraits to large-scale commercial projects. Every project is a new
-            story, and I believe in letting the subject speak for itself.
+            incredible brands and individuals, capturing everything from
+            intimate portraits to large-scale commercial projects. Every project
+            is a new story, and I believe in letting the subject speak for
+            itself.
           </p>
           <p className="text-zinc-400 text-sm leading-relaxed">
             When I&apos;m not behind the camera, you&apos;ll find me exploring
-            new cities, curating playlists, or working on personal film projects.
-            I&apos;m always open to new collaborations — feel free to reach out.
+            new cities, curating playlists, or working on personal film
+            projects. I&apos;m always open to new collaborations — feel free to
+            reach out.
           </p>
+        </div>
+
+        <div className="hidden lg:flex justify-end">
+          <div className="w-2/3 xl:w-2/3 ml-auto">
+            <ProfilePhoto initialUrl={profilePhotoUrl} />
+          </div>
         </div>
       </div>
 
@@ -132,10 +110,7 @@ export default function AboutContent({ brands: rawBrands, profilePhotoUrl }: Pro
               </thead>
               <tbody>
                 {brands.map((brand) => (
-                  <tr
-                    key={brand.id}
-                    className="border-b border-zinc-800/50"
-                  >
+                  <tr key={brand.id} className="border-b border-zinc-800/50">
                     <td className="py-3 pr-4">
                       <BrandAvatar brand={brand} />
                     </td>
@@ -156,7 +131,10 @@ export default function AboutContent({ brands: rawBrands, profilePhotoUrl }: Pro
                     <td className="py-3 pr-4">
                       <div className="flex flex-wrap gap-x-2 gap-y-1">
                         {brand.projects.map((p, i) => (
-                          <span key={p.slug} className="inline-flex items-center">
+                          <span
+                            key={p.slug}
+                            className="inline-flex items-center"
+                          >
                             <Link
                               href={`/${p.slug}`}
                               className="text-zinc-400 hover:text-white transition-colors underline underline-offset-2"
@@ -218,7 +196,7 @@ export default function AboutContent({ brands: rawBrands, profilePhotoUrl }: Pro
                 </div>
                 <div className="text-[10px] font-mono uppercase tracking-wider">
                   <span className="text-zinc-600">
-                    {brand.projects.length > 1 ? "Projects: " : "Project: "}
+                    {brand.projects.length > 1 ? 'Projects: ' : 'Project: '}
                   </span>
                   {brand.projects.map((p, i) => (
                     <span key={p.slug}>
@@ -286,15 +264,15 @@ export default function AboutContent({ brands: rawBrands, profilePhotoUrl }: Pro
 
 function BrandInstagram({
   socialUrl,
-  className = "",
+  className = '',
 }: {
   socialUrl?: string;
   className?: string;
 }) {
-  if (socialUrl && socialUrl.includes("instagram")) {
+  if (socialUrl && socialUrl.includes('instagram')) {
     const handle = socialUrl
-      .replace(/https?:\/\/(www\.)?instagram\.com\//, "@")
-      .replace(/\/$/, "");
+      .replace(/https?:\/\/(www\.)?instagram\.com\//, '@')
+      .replace(/\/$/, '');
     return (
       <a
         href={socialUrl}

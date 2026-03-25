@@ -2,18 +2,22 @@
 
 import { useEffect, useState } from "react";
 
-export default function StickyTitle() {
+interface Props {
+  title: string;
+  scrollThreshold?: number;
+}
+
+export default function StickyHeader({ title, scrollThreshold = 0.4 }: Props) {
   const [visible, setVisible] = useState(false);
   const [sectionName, setSectionName] = useState("");
 
   useEffect(() => {
     const handleScroll = () => {
-      setVisible(window.scrollY > window.innerHeight * 0.6);
+      setVisible(window.scrollY > window.innerHeight * scrollThreshold);
     };
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Find the last section that's intersecting (topmost visible)
         for (const entry of entries) {
           if (entry.isIntersecting) {
             setSectionName(entry.target.getAttribute("data-section") ?? "");
@@ -29,7 +33,6 @@ export default function StickyTitle() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     observe();
-    // Re-observe when DOM changes (e.g. infinite scroll adds content)
     const mutationObserver = new MutationObserver(observe);
     mutationObserver.observe(document.body, { childList: true, subtree: true });
 
@@ -38,7 +41,7 @@ export default function StickyTitle() {
       observer.disconnect();
       mutationObserver.disconnect();
     };
-  }, []);
+  }, [scrollThreshold]);
 
   return (
     <div
@@ -49,7 +52,7 @@ export default function StickyTitle() {
       }`}
     >
       <p className="text-white text-xs font-mono uppercase tracking-widest">
-        Making intentions meet cinema
+        {title}
       </p>
       {sectionName && (
         <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-wider mt-1">

@@ -31,6 +31,7 @@ import ProjectSettingsForm from '@/components/forms/project-settings/ProjectSett
 import { ProjectSettingsFormValues } from '@/components/forms/project-settings/schema';
 import Skeleton from '@/components/common/Skeleton';
 import FloatingPaths from '@/components/home/FloatingPaths';
+import StickyHeader from '@/components/common/StickyHeader';
 import { PageContent as PageContentType } from '@/store/content/types';
 
 interface Props {
@@ -276,6 +277,9 @@ export default function PageContent({
 
   return (
     <div className="relative flex flex-col gap-6 w-full px-3 md:px-6 xl:px-24">
+      {typeof pageLabel === 'string' && pageLabel && (
+        <StickyHeader title={pageLabel} scrollThreshold={0.2} />
+      )}
       {isSaving && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
           <p className="text-white text-sm font-mono uppercase tracking-wider">
