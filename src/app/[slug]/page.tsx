@@ -48,21 +48,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
+  const images = ogImage
+    ? [{ url: ogImage, width: 1200, height: 630, alt: String(title) }]
+    : undefined;
+
   return {
     title,
     description,
     openGraph: {
       title: `${title} — Kartik Dhawan`,
       description,
-      ...(ogImage && {
-        images: [{ url: ogImage, width: 1200, height: 630, alt: String(title) }],
-      }),
+      images,
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} — Kartik Dhawan`,
       description,
-      ...(ogImage && { images: [ogImage] }),
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }

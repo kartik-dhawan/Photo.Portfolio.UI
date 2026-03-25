@@ -9,23 +9,23 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
   const description = "I'm Kartik Dhawan — a photographer and videographer based in India. Specializing in portraits, brand storytelling, and cinematic video work.";
 
+  const images = settings.profilePhotoUrl
+    ? [{ url: settings.profilePhotoUrl, width: 1200, height: 800, alt: "Kartik Dhawan" }]
+    : undefined;
+
   return {
     title: "About",
     description,
     openGraph: {
       title: "About — Kartik Dhawan",
       description,
-      ...(settings.profilePhotoUrl && {
-        images: [{ url: settings.profilePhotoUrl, width: 1200, height: 800, alt: "Kartik Dhawan" }],
-      }),
+      images,
     },
     twitter: {
       card: "summary_large_image",
       title: "About — Kartik Dhawan",
       description,
-      ...(settings.profilePhotoUrl && {
-        images: [settings.profilePhotoUrl],
-      }),
+      images: settings.profilePhotoUrl ? [settings.profilePhotoUrl] : undefined,
     },
   };
 }
