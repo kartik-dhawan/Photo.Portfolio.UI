@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BrandAvatar from "@/components/common/BrandAvatar";
+import ProfilePhoto from "@/components/ProfilePhoto";
 import { Brand } from "@/store/content";
 import { SOCIALS } from "@/lib/socials";
 import { BrandWithProject } from "@/lib/content";
@@ -32,37 +33,76 @@ function groupBrandsByName(brands: BrandWithProject[]): GroupedBrand[] {
 
 interface Props {
   brands: BrandWithProject[];
+  profilePhotoUrl: string;
 }
 
-export default function AboutContent({ brands: rawBrands }: Props) {
+export default function AboutContent({ brands: rawBrands, profilePhotoUrl }: Props) {
   const brands = groupBrandsByName(rawBrands);
 
   return (
     <div className="flex flex-col gap-12 w-full px-6 xl:px-24">
-      <div>
+      {/* Mobile: photo on top */}
+      <div className="md:hidden">
+        <ProfilePhoto initialUrl={profilePhotoUrl} />
+      </div>
+
+      {/* Desktop: title above, then 2fr text | 1fr photo */}
+      <div className="hidden md:block">
+        <h1 className="text-white text-2xl font-mono uppercase tracking-wider mb-8">
+          About
+        </h1>
+        <div className="grid grid-cols-2 gap-8">
+          <div className="flex flex-col gap-6 font-[family-name:var(--font-geist-sans)]">
+            <p className="text-zinc-300 text-sm leading-relaxed">
+              I&apos;m Kartik Dhawan — a photographer and videographer based in
+              India. I specialize in portraits, brand storytelling, and cinematic
+              video work. My approach is rooted in natural light, honest moments,
+              and a minimal aesthetic.
+            </p>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              Over the years, I&apos;ve had the opportunity to collaborate with
+              incredible brands and individuals, capturing everything from intimate
+              portraits to large-scale commercial projects. Every project is a new
+              story, and I believe in letting the subject speak for itself.
+            </p>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              When I&apos;m not behind the camera, you&apos;ll find me exploring
+              new cities, curating playlists, or working on personal film projects.
+              I&apos;m always open to new collaborations — feel free to reach out.
+            </p>
+          </div>
+          <div className="flex justify-end">
+            <div className="w-2/3">
+              <ProfilePhoto initialUrl={profilePhotoUrl} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile: text below photo */}
+      <div className="flex flex-col gap-6 md:hidden">
         <h1 className="text-white text-2xl font-mono uppercase tracking-wider">
           About
         </h1>
-      </div>
-
-      <div className="max-w-2xl flex flex-col gap-6 font-[family-name:var(--font-geist-sans)]">
-        <p className="text-zinc-300 text-sm leading-relaxed">
-          I&apos;m Kartik Dhawan — a photographer and videographer based in
-          India. I specialize in portraits, brand storytelling, and cinematic
-          video work. My approach is rooted in natural light, honest moments,
-          and a minimal aesthetic.
-        </p>
-        <p className="text-zinc-400 text-sm leading-relaxed">
-          Over the years, I&apos;ve had the opportunity to collaborate with
-          incredible brands and individuals, capturing everything from intimate
-          portraits to large-scale commercial projects. Every project is a new
-          story, and I believe in letting the subject speak for itself.
-        </p>
-        <p className="text-zinc-400 text-sm leading-relaxed">
-          When I&apos;m not behind the camera, you&apos;ll find me exploring
-          new cities, curating playlists, or working on personal film projects.
-          I&apos;m always open to new collaborations — feel free to reach out.
-        </p>
+        <div className="flex flex-col gap-6 font-[family-name:var(--font-geist-sans)]">
+          <p className="text-zinc-300 text-sm leading-relaxed">
+            I&apos;m Kartik Dhawan — a photographer and videographer based in
+            India. I specialize in portraits, brand storytelling, and cinematic
+            video work. My approach is rooted in natural light, honest moments,
+            and a minimal aesthetic.
+          </p>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            Over the years, I&apos;ve had the opportunity to collaborate with
+            incredible brands and individuals, capturing everything from intimate
+            portraits to large-scale commercial projects. Every project is a new
+            story, and I believe in letting the subject speak for itself.
+          </p>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            When I&apos;m not behind the camera, you&apos;ll find me exploring
+            new cities, curating playlists, or working on personal film projects.
+            I&apos;m always open to new collaborations — feel free to reach out.
+          </p>
+        </div>
       </div>
 
       {brands.length > 0 && (
