@@ -18,3 +18,24 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-mono), monospace;
 }
+
+@keyframes scroll-arrow {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-scroll-arrow {
+  animation: scroll-arrow 1.8s ease-in-out infinite;
+}

@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm";
 
 export default function RichTextView({ markdown }: { markdown: string }) {
   return (
-    <div className="prose prose-invert prose-sm max-w-none font-[family-name:var(--font-geist-sans)]">
+    <div className="prose prose-invert prose-sm max-w-none font-mono">
       <Markdown remarkPlugins={[remarkGfm]}>{markdown}</Markdown>
     </div>
   );

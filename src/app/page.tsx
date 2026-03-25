@@ -1,5 +1,7 @@
 import { getAllMedia, getProjectCards } from '@/lib/content';
 import FloatingPaths from '@/components/home/FloatingPaths';
+import ScrollToWork from '@/components/home/ScrollToWork';
+import StickyTitle from '@/components/home/StickyTitle';
 import ProjectsGrid from '@/components/content/ProjectsGrid';
 import CollectionsGrid from '@/components/content/CollectionsGrid';
 
@@ -15,6 +17,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col">
+      <StickyTitle />
       <div className="relative flex flex-col min-h-[80vh] overflow-hidden px-6 md:px-8 pt-12 md:pt-20">
         <div className="absolute inset-0">
           <FloatingPaths position={1} />
@@ -30,13 +33,14 @@ export default async function Home() {
             Video/photographer for the fearless, the open minded &amp; the
             adventurous
           </p>
+          <ScrollToWork />
         </div>
       </div>
 
       <ProjectsGrid projects={projects} />
 
       {items.length > 0 && (
-        <div className="px-3 md:px-6 xl:px-24 py-12">
+        <div data-section="All Work" className="px-3 md:px-6 xl:px-24 py-12">
           <h2 className="text-zinc-400 text-xs font-mono uppercase tracking-wider mb-8">
             All Work
           </h2>

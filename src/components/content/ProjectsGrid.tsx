@@ -32,7 +32,7 @@ export default function ProjectsGrid({ projects }: Props) {
   if (sorted.length === 0) return null;
 
   return (
-    <div className="px-3 md:px-6 xl:px-24 py-12">
+    <div id="projects" data-section="Projects" className="px-3 md:px-6 xl:px-24 py-12">
       <h2 className="text-zinc-400 text-xs font-mono uppercase tracking-wider mb-8">
         Projects
       </h2>
