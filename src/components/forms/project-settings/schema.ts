@@ -3,6 +3,7 @@ import * as yup from "yup";
 export const projectSettingsSchema = yup.object({
   label: yup.string().trim().required("Label is required"),
   filmedAt: yup.string().trim().default(""),
+  tagInput: yup.string().trim().default(""),
   brands: yup.array().of(
     yup.object({
       id: yup.string().required(),
@@ -23,6 +24,7 @@ export const addBrandSchema = yup.object({
   name: yup.string().trim().required("Brand name is required"),
   socialUrl: yup.string().trim().url("Must be a valid URL").default(""),
   review: yup.string().trim().default(""),
+  logoPreview: yup.string().default(""),
 });
 
 export type AddBrandFormValues = yup.InferType<typeof addBrandSchema>;

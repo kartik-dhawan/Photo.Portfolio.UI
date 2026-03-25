@@ -49,9 +49,7 @@ export default function ProjectSettingsForm({
   onStateChange,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [logoPreview, setLogoPreview] = useState('');
   const [mode, setMode] = useState<'new' | 'existing'>('new');
-  const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const pendingFiles = useRef<Map<string, File>>(new Map());
@@ -66,6 +64,8 @@ export default function ProjectSettingsForm({
     register,
     control,
     getValues,
+    setValue,
+    watch,
     reset: resetMain,
     formState: { isDirty },
   } = useForm<ProjectSettingsFormValues>({
@@ -73,6 +73,7 @@ export default function ProjectSettingsForm({
     defaultValues: {
       label: initialLabel,
       filmedAt: initialFilmedAt,
+      tagInput: '',
       brands: initialBrands.map((b) => ({
         id: b.id,
         name: b.name,
@@ -83,6 +84,8 @@ export default function ProjectSettingsForm({
       tags: initialTags.map((t) => ({ value: t })),
     },
   });
+
+  const tagInput = watch('tagInput');
 
   const {
     fields: brandFields,
@@ -102,8 +105,10 @@ export default function ProjectSettingsForm({
   // Add brand sub-form
   const addBrandForm = useForm<AddBrandFormValues>({
     resolver: yupResolver(addBrandSchema),
-    defaultValues: { name: '', socialUrl: '', review: '' },
+    defaultValues: { name: '', socialUrl: '', review: '', logoPreview: '' },
   });
+
+  const logoPreview = addBrandForm.watch('logoPreview');
 
   // Sync when parent data actually changes (not on every render)
   const prevInitialRef = useRef('');
@@ -119,6 +124,7 @@ export default function ProjectSettingsForm({
     resetMain({
       label: initialLabel,
       filmedAt: initialFilmedAt,
+      tagInput: '',
       brands: initialBrands.map((b) => ({
         id: b.id,
         name: b.name,
@@ -150,7 +156,7 @@ export default function ProjectSettingsForm({
     if (!file) return;
     const blobUrl = URL.createObjectURL(file);
     pendingFiles.current.set(blobUrl, file);
-    setLogoPreview(blobUrl);
+    addBrandForm.setValue('logoPreview', blobUrl);
     e.target.value = '';
   };
 
@@ -158,12 +164,11 @@ export default function ProjectSettingsForm({
     appendBrand({
       id: crypto.randomUUID(),
       name: data.name,
-      logoUrl: logoPreview || '',
+      logoUrl: data.logoPreview || '',
       socialUrl: data.socialUrl || undefined,
       review: data.review || undefined,
     });
     addBrandForm.reset();
-    setLogoPreview('');
   };
 
   const handlePickExisting = (existing: ExistingBrand) => {
@@ -186,10 +191,10 @@ export default function ProjectSettingsForm({
   };
 
   const handleAddTag = () => {
-    const value = tagInput.trim();
+    const value = (tagInput ?? '').trim();
     if (value && !tagFields.some((t) => t.value === value)) {
       appendTag({ value });
-      setTagInput('');
+      setValue('tagInput', '');
     }
   };
 
@@ -309,8 +314,7 @@ export default function ProjectSettingsForm({
           <input
             id="tag-input"
             type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
+            {...register('tagInput')}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
