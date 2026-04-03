@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { FirestoreNavItem } from "@/lib/types";
 import { API_ROUTES } from "@/routeConfig/apiRoutes";
+import { getAuthToken } from "@/store/auth/slice";
 import { initialState } from "./initialState";
 
 export const fetchNavItems = createAsyncThunk(
   "nav/fetch",
-  async (_, { rejectWithValue }) => {
-    const res = await fetch(API_ROUTES.list);
+  async (userId: string, { rejectWithValue }) => {
+    const res = await fetch(API_ROUTES.list(userId));
     if (!res.ok) {
       const body = await res.json();
       return rejectWithValue(body.error || "Failed to fetch routes");
@@ -17,10 +18,14 @@ export const fetchNavItems = createAsyncThunk(
 
 export const addNavItem = createAsyncThunk(
   "nav/add",
-  async (item: Omit<FirestoreNavItem, "id">, { rejectWithValue }) => {
+  async (item: Omit<FirestoreNavItem, "id"> & { userId?: string }, { rejectWithValue }) => {
+    const token = getAuthToken();
     const res = await fetch(API_ROUTES.create, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
       body: JSON.stringify(item),
     });
     if (!res.ok) {
@@ -39,9 +44,13 @@ export const updateNavItem = createAsyncThunk(
   ) => {
     const state = getState() as { nav: { items: FirestoreNavItem[] } };
     const prev = state.nav.items.find((i) => i.id === id);
+    const token = getAuthToken();
     const res = await fetch(API_ROUTES.update(id), {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
       body: JSON.stringify(data),
     });
     if (!res.ok) {
@@ -57,7 +66,13 @@ export const removeNavItem = createAsyncThunk(
   async (id: string, { getState, rejectWithValue }) => {
     const state = getState() as { nav: { items: FirestoreNavItem[] } };
     const prev = state.nav.items.find((i) => i.id === id);
-    const res = await fetch(API_ROUTES.delete(id), { method: "DELETE" });
+    const token = getAuthToken();
+    const res = await fetch(API_ROUTES.delete(id), {
+      method: "DELETE",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
     if (!res.ok) {
       const body = await res.json();
       return rejectWithValue({ error: body.error || "Failed to delete route", prev });

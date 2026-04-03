@@ -48,7 +48,7 @@ export default function PageContent({
   initialRouteId,
 }: Props) {
   const dispatch = useAppDispatch();
-  const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
+  const { isAuthenticated: isAdmin, uid: authUid } = useAppSelector((s) => s.auth);
   const { items: navItems } = useAppSelector((s) => s.nav);
   const { pages, drafts, loading, saving, error } = useAppSelector(
     (s) => s.content
@@ -83,7 +83,7 @@ export default function PageContent({
   const hydrated = useRef(false);
   useEffect(() => {
     if (isAdmin) {
-      dispatch(fetchPageContent(slug));
+      dispatch(fetchPageContent({ slug, userId: authUid ?? "" }));
     } else if (!hydrated.current && initialContent) {
       // For non-admin, no need to re-fetch — server data is fresh
       hydrated.current = true;

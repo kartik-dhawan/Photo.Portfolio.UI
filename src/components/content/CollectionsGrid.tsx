@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
+import { useAppSelector } from "@/store";
 import { CollectionItem, CollectionsResponse } from "@/store/content/types";
 import CollectionCard from "./CollectionCard";
 import Skeleton from "@/components/common/Skeleton";
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export default function CollectionsGrid({ initialItems, total, pageSize }: Props) {
+  const { uid } = useAppSelector((s) => s.auth);
+  const userId = uid ?? process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "";
   const [items, setItems] = useState(initialItems);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -25,7 +28,7 @@ export default function CollectionsGrid({ initialItems, total, pageSize }: Props
     const nextPage = page + 1;
     try {
       const res = await fetch(
-        `${CONTENT_API_ROUTES.collections}?page=${nextPage}&pageSize=${pageSize}`
+        `${CONTENT_API_ROUTES.collections(userId)}&page=${nextPage}&pageSize=${pageSize}`
       );
       const data: CollectionsResponse = await res.json();
       setItems((prev) => [...prev, ...data.items]);

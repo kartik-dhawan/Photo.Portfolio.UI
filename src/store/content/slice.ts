@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
+import { getAuthToken } from "@/store/auth/slice";
 import { Brand, ContentBlock, PageContent } from "./types";
 import { initialState } from "./initialState";
 
 export const fetchPageContent = createAsyncThunk(
   "content/fetch",
-  async (slug: string, { rejectWithValue }) => {
-    const res = await fetch(CONTENT_API_ROUTES.get(slug));
+  async ({ slug, userId }: { slug: string; userId: string }, { rejectWithValue }) => {
+    const res = await fetch(CONTENT_API_ROUTES.get(slug, userId));
     if (!res.ok) {
       const body = await res.json();
       return rejectWithValue(body.error || "Failed to fetch content");
@@ -18,13 +19,17 @@ export const fetchPageContent = createAsyncThunk(
 export const savePageContent = createAsyncThunk(
   "content/save",
   async (
-    { slug, blocks, brands }: { slug: string; blocks: ContentBlock[]; brands?: Brand[] },
+    { slug, blocks, brands, userId }: { slug: string; blocks: ContentBlock[]; brands?: Brand[]; userId?: string },
     { rejectWithValue }
   ) => {
+    const token = getAuthToken();
     const res = await fetch(CONTENT_API_ROUTES.save(slug), {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ blocks, brands }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify({ blocks, brands, userId }),
     });
     if (!res.ok) {
       const body = await res.json();
@@ -55,9 +60,13 @@ export const uploadMedia = createAsyncThunk(
 export const deleteMedia = createAsyncThunk(
   "content/deleteMedia",
   async (urls: string[], { rejectWithValue }) => {
+    const token = getAuthToken();
     const res = await fetch(CONTENT_API_ROUTES.deleteMedia, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
       body: JSON.stringify({ urls }),
     });
     if (!res.ok) {
