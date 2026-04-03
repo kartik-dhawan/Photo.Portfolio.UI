@@ -32,6 +32,7 @@ import { ProjectSettingsFormValues } from '@/components/forms/project-settings/s
 import Skeleton from '@/components/common/Skeleton';
 import FloatingPaths from '@/components/home/FloatingPaths';
 import StickyHeader from '@/components/common/StickyHeader';
+import { useTenant } from '@/components/TenantProvider';
 import { PageContent as PageContentType } from '@/store/content/types';
 
 interface Props {
@@ -49,6 +50,7 @@ export default function PageContent({
 }: Props) {
   const dispatch = useAppDispatch();
   const { isAuthenticated: isAdmin, uid: authUid } = useAppSelector((s) => s.auth);
+  const { userId: tenantUserId } = useTenant();
   const { items: navItems } = useAppSelector((s) => s.nav);
   const { pages, drafts, loading, saving, error } = useAppSelector(
     (s) => s.content
@@ -83,7 +85,7 @@ export default function PageContent({
   const hydrated = useRef(false);
   useEffect(() => {
     if (isAdmin) {
-      dispatch(fetchPageContent({ slug, userId: authUid ?? "" }));
+      dispatch(fetchPageContent({ slug, userId: tenantUserId }));
     } else if (!hydrated.current && initialContent) {
       // For non-admin, no need to re-fetch — server data is fresh
       hydrated.current = true;

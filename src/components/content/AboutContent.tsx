@@ -2,7 +2,7 @@ import Link from 'next/link';
 import BrandAvatar from '@/components/common/BrandAvatar';
 import ProfilePhoto from '@/components/ProfilePhoto';
 import { Brand } from '@/store/content';
-import { SOCIALS } from '@/lib/socials';
+import { SocialLink } from '@/lib/socials';
 import { BrandWithProject } from '@/lib/content';
 
 interface GroupedBrand extends Brand {
@@ -34,11 +34,15 @@ function groupBrandsByName(brands: BrandWithProject[]): GroupedBrand[] {
 interface Props {
   brands: BrandWithProject[];
   profilePhotoUrl: string;
+  aboutText: string;
+  socials: SocialLink[];
 }
 
 export default function AboutContent({
   brands: rawBrands,
   profilePhotoUrl,
+  aboutText,
+  socials,
 }: Props) {
   const brands = groupBrandsByName(rawBrands);
 
@@ -55,25 +59,15 @@ export default function AboutContent({
         </div>
 
         <div className="flex flex-col gap-6 font-[family-name:var(--font-geist-sans)]">
-          <p className="text-zinc-300 text-sm leading-relaxed">
-            I&apos;m Kartik Dhawan — a photographer and videographer based in
-            India. I specialize in portraits, brand storytelling, and cinematic
-            video work. My approach is rooted in natural light, honest moments,
-            and a minimal aesthetic.
-          </p>
-          <p className="text-zinc-400 text-sm leading-relaxed">
-            Over the years, I&apos;ve had the opportunity to collaborate with
-            incredible brands and individuals, capturing everything from
-            intimate portraits to large-scale commercial projects. Every project
-            is a new story, and I believe in letting the subject speak for
-            itself.
-          </p>
-          <p className="text-zinc-400 text-sm leading-relaxed">
-            When I&apos;m not behind the camera, you&apos;ll find me exploring
-            new cities, curating playlists, or working on personal film
-            projects. I&apos;m always open to new collaborations — feel free to
-            reach out.
-          </p>
+          {aboutText ? (
+            aboutText.split("\n\n").map((paragraph, i) => (
+              <p key={i} className={`text-sm leading-relaxed ${i === 0 ? "text-zinc-300" : "text-zinc-400"}`}>
+                {paragraph}
+              </p>
+            ))
+          ) : (
+            <p className="text-zinc-500 text-sm">No bio yet.</p>
+          )}
         </div>
 
         <div className="hidden lg:flex justify-end">
@@ -229,7 +223,7 @@ export default function AboutContent({
           Connect
         </h2>
         <div className="flex flex-col gap-3">
-          {SOCIALS.map((social) => (
+          {socials.map((social) => (
             <a
               key={social.name}
               href={social.url}

@@ -53,7 +53,12 @@ export default async function AboutPage({ params }: PageProps) {
 
   return (
     <div className="h-full min-h-[80vh] py-12 px-8">
-      <AboutContent brands={brands} profilePhotoUrl={settings.profilePhotoUrl} />
+      <AboutContent
+        brands={brands}
+        profilePhotoUrl={settings.profilePhotoUrl}
+        aboutText={user.aboutText}
+        socials={user.socials}
+      />
     </div>
   );
 }

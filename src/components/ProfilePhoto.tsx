@@ -4,13 +4,14 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { useAppSelector } from "@/store";
 import { uploadToStorage } from "@/lib/upload";
+import { getAuthToken } from "@/store/auth/slice";
 
 interface Props {
   initialUrl: string;
 }
 
 export default function ProfilePhoto({ initialUrl }: Props) {
-  const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
+  const { isAuthenticated: isAdmin, uid } = useAppSelector((s) => s.auth);
   const [photoUrl, setPhotoUrl] = useState(initialUrl);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -21,10 +22,14 @@ export default function ProfilePhoto({ initialUrl }: Props) {
     setUploading(true);
     try {
       const { publicUrl } = await uploadToStorage("profile", file);
+      const token = getAuthToken();
       await fetch("/api/settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profilePhotoUrl: publicUrl }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ profilePhotoUrl: publicUrl, userId: uid }),
       });
       setPhotoUrl(publicUrl);
     } finally {
