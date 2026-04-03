@@ -1,8 +1,8 @@
-import { MetadataRoute } from "next";
-import { getNavItems } from "@/lib/navItems";
-import { getAllUsers } from "@/lib/users";
+import { MetadataRoute } from 'next';
+import { getNavItems } from '@/lib/navItems';
+import { getAllUsers } from '@/lib/users';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kartikdhawan.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kartikdhawan.in';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const users = await getAllUsers();
@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: SITE_URL,
       lastModified: new Date(),
-      changeFrequency: "weekly",
+      changeFrequency: 'weekly',
       priority: 1,
     },
   ];
@@ -20,20 +20,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     allPages.push({
       url: `${SITE_URL}/${user.username}`,
       lastModified: new Date(),
-      changeFrequency: "weekly",
+      changeFrequency: 'weekly',
       priority: 0.9,
     });
     allPages.push({
       url: `${SITE_URL}/${user.username}/about`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
+      changeFrequency: 'monthly',
       priority: 0.7,
     });
     for (const item of navItems.filter((i) => !i.hidden)) {
       allPages.push({
         url: `${SITE_URL}/${user.username}${item.route}`,
         lastModified: new Date(),
-        changeFrequency: "weekly",
+        changeFrequency: 'weekly',
         priority: 0.8,
       });
     }

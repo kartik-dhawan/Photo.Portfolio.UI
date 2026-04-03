@@ -6,7 +6,7 @@ const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
 // Custom domain → username mapping
 // Format: {"laiba.me":"laiba","john.com":"john"}
 const DOMAIN_MAP: Record<string, string> = JSON.parse(
-  process.env.DOMAIN_MAP ?? "{}"
+  process.env.NEXT_PUBLIC_DOMAIN_MAP ?? process.env.DOMAIN_MAP ?? "{}"
 );
 
 function rewriteForUser(request: NextRequest, username: string): NextResponse {
