@@ -62,7 +62,11 @@ export default function LoginButton() {
       setLoggingIn(true);
       const result = await dispatch(login(data)).unwrap();
       setShowForm(false);
-      if (result.username) {
+      if (result.role === "superAdmin") {
+        // Super admin stays on current page, just reload to enable editing
+        window.location.reload();
+      } else if (result.username) {
+        // Regular admin goes to their portfolio
         window.location.href = `/${result.username}`;
       } else {
         window.location.reload();
