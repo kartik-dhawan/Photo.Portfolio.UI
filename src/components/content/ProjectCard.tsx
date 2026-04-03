@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ProjectCard as ProjectCardType } from "@/lib/content";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { updateNavItem } from "@/store/nav";
+import { useTenant } from "@/components/TenantProvider";
 
 interface Props {
   project: ProjectCardType;
@@ -12,7 +13,9 @@ interface Props {
 
 export default function ProjectCard({ project }: Props) {
   const dispatch = useAppDispatch();
-  const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
+  const { isAuthenticated, uid: authUid, role } = useAppSelector((s) => s.auth);
+  const { userId: tenantUserId } = useTenant();
+  const isAdmin = isAuthenticated && (role === "superAdmin" || authUid === tenantUserId);
   const { items: navItems } = useAppSelector((s) => s.nav);
 
   const navItem = navItems.find((n) => n.route === `/${project.slug}`);

@@ -10,27 +10,41 @@ async function loadAuth() {
 
 const TOKEN_KEY = "auth_token";
 const EXPIRY_KEY = "auth_token_expiry";
+const UID_KEY = "auth_uid";
 
-function saveToken(token: string, expirationTime: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(EXPIRY_KEY, expirationTime);
+function saveToken(uid: string, token: string, expirationTime: string) {
+  localStorage.setItem(UID_KEY, uid);
+  localStorage.setItem(`${TOKEN_KEY}_${uid}`, token);
+  localStorage.setItem(`${EXPIRY_KEY}_${uid}`, expirationTime);
 }
 
 function clearTokenStorage() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(EXPIRY_KEY);
+  const uid = localStorage.getItem(UID_KEY);
+  if (uid) {
+    localStorage.removeItem(`${TOKEN_KEY}_${uid}`);
+    localStorage.removeItem(`${EXPIRY_KEY}_${uid}`);
+  }
+  localStorage.removeItem(UID_KEY);
+}
+
+function getStoredUid(): string | null {
+  return localStorage.getItem(UID_KEY);
 }
 
 function isTokenValid(): boolean {
-  const token = localStorage.getItem(TOKEN_KEY);
-  const expiry = localStorage.getItem(EXPIRY_KEY);
+  const uid = getStoredUid();
+  if (!uid) return false;
+  const token = localStorage.getItem(`${TOKEN_KEY}_${uid}`);
+  const expiry = localStorage.getItem(`${EXPIRY_KEY}_${uid}`);
   if (!token || !expiry) return false;
   return Date.now() < Number(expiry);
 }
 
 /** Get the stored auth token for API calls */
 export function getAuthToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  const uid = getStoredUid();
+  if (!uid) return null;
+  return localStorage.getItem(`${TOKEN_KEY}_${uid}`);
 }
 
 interface AuthPayload {
@@ -54,6 +68,7 @@ export const initAuth = createAsyncThunk(
         if (u) {
           const result = await u.getIdTokenResult();
           saveToken(
+            u.uid,
             result.token,
             String(new Date(result.expirationTime).getTime())
           );
@@ -90,6 +105,7 @@ export const login = createAsyncThunk(
     );
     const result = await cred.user.getIdTokenResult();
     saveToken(
+      cred.user.uid,
       result.token,
       String(new Date(result.expirationTime).getTime())
     );

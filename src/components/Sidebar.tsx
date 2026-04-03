@@ -25,8 +25,9 @@ function groupBySectionName(items: NavItem[]): [string, NavItem[]][] {
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((s) => s.nav);
-  const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
-  const { displayName, tagline } = useTenant();
+  const { isAuthenticated, uid: authUid, role } = useAppSelector((s) => s.auth);
+  const { displayName, tagline, userId: tenantUserId } = useTenant();
+  const isAdmin = isAuthenticated && (role === "superAdmin" || authUid === tenantUserId);
   const pathname = usePathname();
   const [isAdding, setIsAdding] = useState(false);
 
