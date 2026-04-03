@@ -46,9 +46,10 @@ export function proxy(request: NextRequest) {
   if (!isMainDomain) {
     const mappedUsername = DOMAIN_MAP[domain];
     if (mappedUsername) {
-      return rewriteForUser(request, mappedUsername);
+      const response = rewriteForUser(request, mappedUsername);
+      response.headers.set("x-custom-domain", "true");
+      return response;
     }
-    // Unknown domain — fall through to default user
     return rewriteForUser(request, DEFAULT_USERNAME);
   }
 

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { headers } from "next/headers";
 import { getUserByUsername } from "@/lib/users";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
@@ -61,8 +62,12 @@ export default async function UsernameLayout({ children, params }: LayoutProps) 
     );
   }
 
+  const headersList = await headers();
+  const isCustomDomainRequest = headersList.get("x-custom-domain") === "true";
+  const hasCustomDomain = !!user.customDomain || isCustomDomainRequest;
+
   return (
-    <TenantProvider userId={user.uid} username={user.username} displayName={user.displayName} tagline={user.tagline} hasCustomDomain={!!user.customDomain}>
+    <TenantProvider userId={user.uid} username={user.username} displayName={user.displayName} tagline={user.tagline} hasCustomDomain={hasCustomDomain}>
       <ThemeProvider themeId={user.themeId ?? "black"}>
       <MobileNav displayName={user.displayName} />
       <div className="flex min-h-screen">
