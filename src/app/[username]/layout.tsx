@@ -1,9 +1,13 @@
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getUserByUsername } from "@/lib/users";
+import { getNavItems } from "@/lib/navItems";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import SocialLinks from "@/components/SocialLinks";
 import TenantProvider from "@/components/TenantProvider";
+
+const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -40,6 +44,17 @@ export default async function UsernameLayout({ children, params }: LayoutProps) 
   const user = await getUserByUsername(username);
 
   if (!user) {
+    // Maybe this "username" is actually a slug for the default user (old URL format)
+    const defaultUser = await getUserByUsername(DEFAULT_USERNAME);
+    if (defaultUser) {
+      const navItems = await getNavItems(defaultUser.uid);
+      const matchesSlug = navItems.some(
+        (item) => item.route === `/${username}` || item.route === `/${username}/`
+      );
+      if (matchesSlug || username === "about") {
+        redirect(`/${DEFAULT_USERNAME}/${username}`);
+      }
+    }
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-zinc-600 text-sm font-mono">User not found</p>
