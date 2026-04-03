@@ -87,9 +87,9 @@ export default function AdminUsersTable({ initialUsers }: Props) {
             {users.map((u) => (
               <tr key={u.uid} className="border-b border-zinc-800/50">
                 <td className="py-3 pr-4">
-                  <Link href={`/${u.username}`} className="text-zinc-300 hover:text-white underline underline-offset-2">
+                  <a href={`/${u.username}`} className="text-zinc-300 hover:text-white underline underline-offset-2">
                     {u.username}
-                  </Link>
+                  </a>
                 </td>
                 <td className="py-3 pr-4 text-zinc-400">{u.displayName}</td>
                 <td className="py-3 pr-4 text-zinc-500">{u.email}</td>

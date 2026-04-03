@@ -53,8 +53,21 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const footerIdx = sections.findIndex(([name]) => name === '__footer__');
   const addRouteAfterIdx = footerIdx > 0 ? footerIdx - 1 : sections.length - 1;
 
+  const isViewingOtherUser = role === "superAdmin" && authUid !== tenantUserId;
+
   return (
     <nav className="flex flex-col h-full font-mono text-sm">
+      {isViewingOtherUser && (
+        <a
+          href="/"
+          className="flex items-center gap-2 text-zinc-500 hover:text-white text-[10px] uppercase tracking-wider transition-colors mb-4 pb-3 border-b border-zinc-800"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back to home
+        </a>
+      )}
       {error && <span className="text-red-500 text-[10px]">{error}</span>}
 
       {sections.map(([sectionName, sectionItems], idx, arr) => {
