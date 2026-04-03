@@ -22,23 +22,31 @@ export async function POST(request: Request) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { uid, username, displayName, tagline, email, role } =
+    const { username, displayName, tagline, email, password } =
       await request.json();
 
-    if (!uid || !username || !email) {
+    if (!username || !email || !password) {
       return Response.json(
-        { error: "uid, username, and email are required" },
+        { error: "username, email, and password are required" },
         { status: 400 }
       );
     }
 
+    // Create Firebase Auth user
+    const { getAuth } = await import("firebase-admin/auth");
+    const firebaseUser = await getAuth().createUser({
+      email,
+      password,
+      displayName: displayName ?? username,
+    });
+
     const user = await createUser({
-      uid,
+      uid: firebaseUser.uid,
       username,
       displayName: displayName ?? username,
       tagline: tagline ?? "",
       email,
-      role: role ?? "admin",
+      role: "admin",
     });
 
     return Response.json(user, { status: 201 });

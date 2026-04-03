@@ -1,5 +1,6 @@
 import { NavItem } from "@/lib/types";
 import LoginButton from "@/components/LoginButton";
+import UserManagement from "@/components/admin/UserManagement";
 
 export function buildTitleConfig(displayName: string, tagline: string): NavItem {
   return {
@@ -30,6 +31,15 @@ export const aboutConfig: NavItem = {
 };
 
 export const defaultConfig: NavItem[] = [
+  {
+    id: "__users__",
+    route: "",
+    label: <UserManagement />,
+    hidden: false,
+    isNotLink: true,
+    sectionName: "__footer__",
+    order: 9996,
+  },
   {
     id: "__copyright__",
     route: "",
