@@ -6,16 +6,35 @@ import { login, logout } from "@/store/auth";
 import LoginForm from "@/components/forms/auth/LoginForm";
 import { LoginFormValues } from "@/components/forms/auth/schema";
 
+function FullScreenLoader({ message }: { message: string }) {
+  return (
+    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-6 h-6 border-2 border-zinc-700 border-t-white rounded-full animate-spin" />
+        <p className="text-zinc-400 text-xs font-mono uppercase tracking-widest">
+          {message}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginButton() {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((s) => s.auth);
   const [showForm, setShowForm] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  if (loggingIn) return <FullScreenLoader message="Logging in..." />;
+  if (loggingOut) return <FullScreenLoader message="Logging out..." />;
 
   if (isAuthenticated) {
     return (
       <button
         onClick={async () => {
+          setLoggingOut(true);
           await dispatch(logout());
           window.location.href = "/";
         }}
@@ -40,16 +59,16 @@ export default function LoginButton() {
   const handleSubmit = async (data: LoginFormValues) => {
     setServerError("");
     try {
+      setLoggingIn(true);
       const result = await dispatch(login(data)).unwrap();
       setShowForm(false);
-      // Hard navigate to the logged-in user's portfolio
-      // (router.push won't re-render the server layout for the new user)
       if (result.username) {
         window.location.href = `/${result.username}`;
       } else {
         window.location.reload();
       }
     } catch {
+      setLoggingIn(false);
       setServerError("Invalid credentials");
     }
   };
