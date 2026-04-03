@@ -1,0 +1,59 @@
+import { Metadata } from "next";
+import { getUserByUsername } from "@/lib/users";
+import { getAllBrands } from "@/lib/content";
+import { getSettings } from "@/lib/settings";
+import AboutContent from "@/components/content/AboutContent";
+
+export const revalidate = 60;
+
+interface PageProps {
+  params: Promise<{ username: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { username } = await params;
+  const user = await getUserByUsername(username);
+  if (!user) return { title: "About" };
+
+  const settings = await getSettings(user.uid);
+  const description = user.aboutText
+    ? user.aboutText.slice(0, 160)
+    : `About ${user.displayName}`;
+
+  const images = settings.profilePhotoUrl
+    ? [{ url: settings.profilePhotoUrl, width: 1200, height: 800, alt: user.displayName }]
+    : undefined;
+
+  return {
+    title: "About",
+    description,
+    openGraph: {
+      title: `About — ${user.displayName}`,
+      description,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `About — ${user.displayName}`,
+      description,
+      images: settings.profilePhotoUrl ? [settings.profilePhotoUrl] : undefined,
+    },
+  };
+}
+
+export default async function AboutPage({ params }: PageProps) {
+  const { username } = await params;
+  const user = await getUserByUsername(username);
+  if (!user) return null;
+
+  const [brands, settings] = await Promise.all([
+    getAllBrands(user.uid),
+    getSettings(user.uid),
+  ]);
+
+  return (
+    <div className="h-full min-h-[80vh] py-12 px-8">
+      <AboutContent brands={brands} profilePhotoUrl={settings.profilePhotoUrl} />
+    </div>
+  );
+}

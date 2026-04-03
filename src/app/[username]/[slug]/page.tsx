@@ -1,32 +1,23 @@
 import { Metadata } from "next";
+import { getUserByUsername } from "@/lib/users";
 import { getNavItems } from "@/lib/navItems";
 import { getPageContent } from "@/lib/content";
-import { getDefaultUserId } from "@/lib/tenant";
 import PageContent from "@/components/content/PageContent";
 
 export const revalidate = 60;
 
-export async function generateStaticParams() {
-  const userId = await getDefaultUserId();
-  if (!userId) return [];
-  const navItems = await getNavItems(userId);
-  return navItems.map((item) => ({
-    slug: item.route.replace(/^\//, ""),
-  }));
-}
-
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ username: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const userId = await getDefaultUserId();
-  if (!userId) return { title: slug };
+  const { username, slug } = await params;
+  const user = await getUserByUsername(username);
+  if (!user) return { title: slug };
 
   const [content, navItems] = await Promise.all([
-    getPageContent(userId, slug),
-    getNavItems(userId),
+    getPageContent(user.uid, slug),
+    getNavItems(user.uid),
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
@@ -40,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  let description = `${title} — Photography & videography by Kartik Dhawan`;
+  let description = `${title} — Photography & videography by ${user.displayName}`;
   for (const block of content?.blocks ?? []) {
     if (block.type === "richtext" && block.markdown) {
       const text = block.markdown.replace(/[#*_\[\]()>`~-]/g, "").trim();
@@ -59,13 +50,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     openGraph: {
-      title: `${title} — Kartik Dhawan`,
+      title: `${title} — ${user.displayName}`,
       description,
       images,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} — Kartik Dhawan`,
+      title: `${title} — ${user.displayName}`,
       description,
       images: ogImage ? [ogImage] : undefined,
     },
@@ -73,11 +64,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SectionPage({ params }: PageProps) {
-  const { slug } = await params;
-  const userId = await getDefaultUserId();
+  const { username, slug } = await params;
+  const user = await getUserByUsername(username);
+  if (!user) return null;
+
   const [content, navItems] = await Promise.all([
-    getPageContent(userId, slug),
-    getNavItems(userId),
+    getPageContent(user.uid, slug),
+    getNavItems(user.uid),
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);

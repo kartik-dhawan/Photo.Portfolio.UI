@@ -1,21 +1,23 @@
 import { NavItem } from "@/lib/types";
 import LoginButton from "@/components/LoginButton";
 
-export const titleConfig: NavItem = {
-  id: "__title__",
-  route: "/",
-  label: (
-    <>
-      Kartik Dhawan
-      <br />
-      <span className="text-zinc-500">Photographer & Videographer</span>
-    </>
-  ),
-  hidden: false,
-  isNotLink: false,
-  sectionName: "__title__",
-  order: -1,
-};
+export function buildTitleConfig(displayName: string, tagline: string): NavItem {
+  return {
+    id: "__title__",
+    route: "/",
+    label: (
+      <>
+        {displayName}
+        <br />
+        <span className="text-zinc-500">{tagline}</span>
+      </>
+    ),
+    hidden: false,
+    isNotLink: false,
+    sectionName: "__title__",
+    order: -1,
+  };
+}
 
 export const aboutConfig: NavItem = {
   id: "__about__",
@@ -54,6 +56,10 @@ export const defaultConfig: NavItem[] = [
   },
 ];
 
-export function buildRouteConfig(firestoreItems: NavItem[]): NavItem[] {
-  return [titleConfig, ...firestoreItems, aboutConfig, ...defaultConfig];
+export function buildRouteConfig(
+  firestoreItems: NavItem[],
+  displayName: string = "Portfolio",
+  tagline: string = ""
+): NavItem[] {
+  return [buildTitleConfig(displayName, tagline), ...firestoreItems, aboutConfig, ...defaultConfig];
 }

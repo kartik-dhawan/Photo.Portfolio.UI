@@ -6,7 +6,7 @@ import Link from "next/link";
 import Sidebar from "./Sidebar";
 import RouteLoaderIndicator from "./common/RouteLoader";
 
-export default function MobileNav() {
+export default function MobileNav({ displayName }: { displayName?: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -18,7 +18,7 @@ export default function MobileNav() {
     <>
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 bg-black/90 backdrop-blur-sm border-b border-zinc-900">
         <Link href="/" className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-white font-bold">
-          Kartik
+          {displayName?.split(" ")[0] ?? "Portfolio"}
           <RouteLoaderIndicator />
         </Link>
         <button

@@ -7,6 +7,7 @@ import { useAppSelector, useAppDispatch } from '@/store';
 import { addNavItem, updateNavItem, removeNavItem } from '@/store/nav';
 import { NavItem } from '@/lib/types';
 import { buildRouteConfig } from '@/routeConfig/routeConfig';
+import { useTenant } from '@/components/TenantProvider';
 import AddRouteForm from '@/components/forms/route/AddRouteForm';
 import Skeleton from '@/components/common/Skeleton';
 import RouteLoaderIndicator from '@/components/common/RouteLoader';
@@ -25,11 +26,12 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((s) => s.nav);
   const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
+  const { displayName, tagline } = useTenant();
   const pathname = usePathname();
   const [isAdding, setIsAdding] = useState(false);
 
   const visibleItems = isAdmin ? items : items.filter((i) => !i.hidden);
-  const routeConfig = buildRouteConfig(visibleItems);
+  const routeConfig = buildRouteConfig(visibleItems, displayName, tagline);
   const sections = groupBySectionName(routeConfig);
 
   const handleAdd = (data: { label: string; sectionName: string }) => {
