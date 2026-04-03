@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { login, logout } from "@/store/auth";
 import LoginForm from "@/components/forms/auth/LoginForm";
@@ -9,17 +8,16 @@ import { LoginFormValues } from "@/components/forms/auth/schema";
 
 export default function LoginButton() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
-  const { isAuthenticated, username } = useAppSelector((s) => s.auth);
+  const { isAuthenticated } = useAppSelector((s) => s.auth);
   const [showForm, setShowForm] = useState(false);
   const [serverError, setServerError] = useState("");
 
   if (isAuthenticated) {
     return (
       <button
-        onClick={() => {
-          dispatch(logout());
-          router.push("/");
+        onClick={async () => {
+          await dispatch(logout());
+          window.location.href = "/";
         }}
         className="text-zinc-600 hover:text-zinc-400 transition-colors text-[10px] uppercase tracking-wider cursor-pointer"
       >
@@ -44,9 +42,12 @@ export default function LoginButton() {
     try {
       const result = await dispatch(login(data)).unwrap();
       setShowForm(false);
-      // Redirect to the logged-in user's portfolio
+      // Hard navigate to the logged-in user's portfolio
+      // (router.push won't re-render the server layout for the new user)
       if (result.username) {
-        router.push(`/${result.username}`);
+        window.location.href = `/${result.username}`;
+      } else {
+        window.location.reload();
       }
     } catch {
       setServerError("Invalid credentials");
