@@ -27,7 +27,16 @@ export default function OnboardingForm() {
     fetch(`/api/users/${uid}`)
       .then((r) => r.json())
       .then((user) => {
-        if (user && !user.displayName) {
+        if (user && (!user.heroTitle && !user.aboutText)) {
+          // Pre-fill with any existing data
+          setForm((f) => ({
+            ...f,
+            displayName: user.displayName || "",
+            tagline: user.tagline || "",
+            heroTitle: user.heroTitle || "",
+            heroSubtitle: user.heroSubtitle || "",
+            aboutText: user.aboutText || "",
+          }));
           setNeedsOnboarding(true);
           modal.open();
         }
@@ -49,7 +58,6 @@ export default function OnboardingForm() {
       });
       setNeedsOnboarding(false);
       modal.close();
-      window.location.reload();
     } finally {
       setSaving(false);
     }
