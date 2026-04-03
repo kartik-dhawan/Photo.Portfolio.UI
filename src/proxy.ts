@@ -18,9 +18,9 @@ export function proxy(request: NextRequest) {
 
   // Skip static paths
   const firstSegment = segments[0];
-  const staticPaths = ["api", "_next", "favicon.ico", "home-meta-image.png", "sitemap.xml", "robots.txt", "manifest.webmanifest", "admin"];
+  const staticPaths = ["api", "_next", "favicon.ico", "home-meta-image.png", "sitemap.xml", "robots.txt", "manifest.webmanifest"];
   // Sub-routes that belong to the default user (not usernames)
-  const defaultSubRoutes = ["about", "settings"];
+  const defaultSubRoutes = ["about", "settings", "admin"];
   if (firstSegment && staticPaths.includes(firstSegment)) {
     return NextResponse.next();
   }
@@ -38,10 +38,10 @@ export function proxy(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    // /about, /settings → rewrite to /{defaultUsername}/about, etc.
-    if (segments.length === 1 && defaultSubRoutes.includes(firstSegment)) {
+    // /about, /settings, /admin/... → rewrite to /{defaultUsername}/...
+    if (defaultSubRoutes.includes(firstSegment)) {
       const url = request.nextUrl.clone();
-      url.pathname = `/${DEFAULT_USERNAME}/${firstSegment}`;
+      url.pathname = `/${DEFAULT_USERNAME}${pathname}`;
       return NextResponse.rewrite(url);
     }
 

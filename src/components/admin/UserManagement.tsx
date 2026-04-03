@@ -23,7 +23,7 @@ export default function UserManagement() {
       </Link>
       {isSuperAdmin && (
         <Link
-          href="/admin/users"
+          href={prefixRoute("/admin/users")}
           className="text-zinc-600 hover:text-zinc-400 transition-colors text-[10px] uppercase tracking-wider"
         >
           Manage Users
