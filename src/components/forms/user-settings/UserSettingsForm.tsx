@@ -45,7 +45,12 @@ export default function UserSettingsForm({ userId, defaultValues, onSaved }: Pro
       });
       if (!res.ok) throw new Error("Failed to save");
       setSuccess(true);
-      onSaved?.();
+      if (onSaved) {
+        onSaved();
+      } else {
+        // Reload to update server-rendered layout (sidebar title etc.)
+        setTimeout(() => window.location.reload(), 500);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
@@ -102,15 +107,17 @@ export default function UserSettingsForm({ userId, defaultValues, onSaved }: Pro
       </div>
 
       {isSuperAdmin && (
-        <div className="flex flex-col gap-2 border-t border-zinc-800 pt-4">
-          <label className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
-            Custom Domain (Super Admin only)
+        <div className="border-t border-zinc-800 pt-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              {...register("customDomainEnabled")}
+              type="checkbox"
+              className="w-4 h-4 accent-white cursor-pointer"
+            />
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+              Custom Domain Enabled (Super Admin only)
+            </span>
           </label>
-          <input
-            {...register("customDomain")}
-            className={inputClass}
-            placeholder="e.g. johndoe.com"
-          />
         </div>
       )}
 

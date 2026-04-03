@@ -1,13 +1,21 @@
 import { getUserByUsername } from "@/lib/users";
 import UserSettingsForm from "@/components/forms/user-settings/UserSettingsForm";
 
+const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
+
+async function resolveUser(username: string) {
+  const user = await getUserByUsername(username);
+  if (user) return user;
+  return getUserByUsername(DEFAULT_USERNAME);
+}
+
 interface PageProps {
   params: Promise<{ username: string }>;
 }
 
 export default async function SettingsPage({ params }: PageProps) {
   const { username } = await params;
-  const user = await getUserByUsername(username);
+  const user = await resolveUser(username);
   if (!user) return null;
 
   return (
@@ -23,7 +31,7 @@ export default async function SettingsPage({ params }: PageProps) {
           heroTitle: user.heroTitle,
           heroSubtitle: user.heroSubtitle,
           aboutText: user.aboutText,
-          customDomain: user.customDomain,
+          customDomainEnabled: !!user.customDomain,
         }}
       />
     </div>

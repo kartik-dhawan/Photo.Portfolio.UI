@@ -6,7 +6,7 @@ export const userSettingsSchema = yup.object({
   heroTitle: yup.string().trim().default(""),
   heroSubtitle: yup.string().trim().default(""),
   aboutText: yup.string().trim().default(""),
-  customDomain: yup.string().trim().nullable().default(null),
+  customDomainEnabled: yup.boolean().default(false),
 });
 
 export type UserSettingsFormValues = yup.InferType<typeof userSettingsSchema>;

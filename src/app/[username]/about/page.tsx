@@ -6,13 +6,21 @@ import AboutContent from "@/components/content/AboutContent";
 
 export const revalidate = 60;
 
+const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
+
+async function resolveUser(username: string) {
+  const user = await getUserByUsername(username);
+  if (user) return user;
+  return getUserByUsername(DEFAULT_USERNAME);
+}
+
 interface PageProps {
   params: Promise<{ username: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params;
-  const user = await getUserByUsername(username);
+  const user = await resolveUser(username);
   if (!user) return { title: "About" };
 
   const settings = await getSettings(user.uid);
@@ -43,7 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AboutPage({ params }: PageProps) {
   const { username } = await params;
-  const user = await getUserByUsername(username);
+  const user = await resolveUser(username);
   if (!user) return null;
 
   const [brands, settings] = await Promise.all([

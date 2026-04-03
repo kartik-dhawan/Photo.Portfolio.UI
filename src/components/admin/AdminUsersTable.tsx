@@ -98,7 +98,7 @@ export default function AdminUsersTable({ initialUsers }: Props) {
                     {u.role}
                   </span>
                 </td>
-                <td className="py-3 pr-4 text-zinc-500">{u.customDomain ?? "—"}</td>
+                <td className="py-3 pr-4 text-zinc-500">{u.customDomain ? "Yes" : "No"}</td>
                 <td className="py-3">
                   <button
                     onClick={() => {
@@ -126,7 +126,7 @@ export default function AdminUsersTable({ initialUsers }: Props) {
               heroTitle: editUser.heroTitle,
               heroSubtitle: editUser.heroSubtitle,
               aboutText: editUser.aboutText,
-              customDomain: editUser.customDomain,
+              customDomainEnabled: !!editUser.customDomain,
             }}
             onSaved={() => {
               editModal.close();
