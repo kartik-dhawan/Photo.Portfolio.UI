@@ -66,7 +66,7 @@ export default async function UsernameLayout({ children, params }: LayoutProps) 
       <ThemeProvider themeId={user.themeId ?? "black"}>
       <MobileNav displayName={user.displayName} />
       <div className="flex min-h-screen">
-        <aside className="hidden md:flex flex-col w-64 shrink-0 px-8 pt-12 pb-8 sticky top-0 h-screen overflow-y-auto border-r border-zinc-800/50">
+        <aside className="hidden md:flex flex-col w-64 shrink-0 px-8 pt-12 pb-8 sticky top-0 h-screen overflow-y-auto border-r border-zinc-800/50" style={{ backgroundColor: "var(--sidebar)" }}>
           <Sidebar />
         </aside>
         <main className="flex-1 md:pt-0 pt-14">

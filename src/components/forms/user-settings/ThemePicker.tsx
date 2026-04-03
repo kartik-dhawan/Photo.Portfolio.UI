@@ -16,7 +16,7 @@ function ThemeCircle({ theme, selected }: { theme: ColorTheme; selected: boolean
       title={theme.name}
     >
       <div className="w-full h-full flex">
-        <div className="w-1/2 h-full" style={{ backgroundColor: theme.background }} />
+        <div className="w-1/2 h-full" style={{ backgroundColor: theme.sidebar }} />
         <div className="w-1/2 h-full" style={{ backgroundColor: theme.accent }} />
       </div>
     </div>

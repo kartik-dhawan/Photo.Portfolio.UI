@@ -4,8 +4,8 @@
 :root {
   --background: #000000;
   --foreground: #ededed;
-  --accent: #27272a;
-  --accent-dark: #18181b;
+  --sidebar: #0a0a0a;
+  --accent: #1e1e1e;
 }
 
 @theme inline {

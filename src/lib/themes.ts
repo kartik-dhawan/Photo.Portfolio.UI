@@ -1,31 +1,27 @@
 export interface ColorTheme {
   id: string;
   name: string;
-  background: string;
-  foreground: string;
-  accent: string;       // lighter shade for UI elements
-  accentDark: string;   // darker shade
+  background: string;   // main content bg
+  foreground: string;   // text color
+  sidebar: string;      // sidebar bg (darker)
+  accent: string;       // lighter pastel for UI elements
 }
 
 export const THEMES: ColorTheme[] = [
   // Monochrome
-  { id: "black",     name: "Midnight",     background: "#000000", foreground: "#ededed", accent: "#27272a", accentDark: "#18181b" },
-  { id: "white",     name: "Snow",         background: "#fafafa", foreground: "#171717", accent: "#e5e5e5", accentDark: "#d4d4d4" },
-  { id: "charcoal",  name: "Charcoal",     background: "#1a1a1a", foreground: "#e5e5e5", accent: "#333333", accentDark: "#262626" },
+  { id: "black",     name: "Midnight",   background: "#000000", foreground: "#ededed", sidebar: "#0a0a0a", accent: "#1e1e1e" },
+  { id: "silver",    name: "Silver",     background: "#1c1c1e", foreground: "#f0f0f0", sidebar: "#141416", accent: "#2c2c30" },
+  { id: "charcoal",  name: "Charcoal",   background: "#141414", foreground: "#e5e5e5", sidebar: "#0e0e0e", accent: "#222222" },
 
-  // Blues
-  { id: "navy",      name: "Navy",         background: "#0a0f1a", foreground: "#cbd5e1", accent: "#1e293b", accentDark: "#0f172a" },
-  { id: "ocean",     name: "Ocean",        background: "#042f2e", foreground: "#ccfbf1", accent: "#134e4a", accentDark: "#0d3d3b" },
-
-  // Warm
-  { id: "espresso",  name: "Espresso",     background: "#1c1210", foreground: "#e8ddd5", accent: "#3b2820", accentDark: "#2a1c15" },
-  { id: "wine",      name: "Wine",         background: "#1a0a10", foreground: "#f0d0dd", accent: "#3b1428", accentDark: "#2a0e1d" },
-  { id: "amber",     name: "Amber",        background: "#1a1400", foreground: "#fef3c7", accent: "#3b3000", accentDark: "#2a2200" },
-
-  // Cool
-  { id: "forest",    name: "Forest",       background: "#0a1a0a", foreground: "#d1e7d1", accent: "#1a3a1a", accentDark: "#0f2a0f" },
-  { id: "slate",     name: "Slate",        background: "#0f1117", foreground: "#c8cdd5", accent: "#1e2230", accentDark: "#151925" },
-  { id: "plum",      name: "Plum",         background: "#150a1a", foreground: "#e8d0f0", accent: "#2a1438", accentDark: "#1f0e2a" },
+  // Pastels
+  { id: "blush",     name: "Blush",      background: "#0d0a0b", foreground: "#f5dde0", sidebar: "#120d0f", accent: "#2a1a1e" },
+  { id: "lavender",  name: "Lavender",   background: "#0c0a10", foreground: "#e0d4f0", sidebar: "#100d15", accent: "#221a30" },
+  { id: "mint",      name: "Mint",       background: "#080d0b", foreground: "#d0f0e0", sidebar: "#0b100e", accent: "#162820" },
+  { id: "peach",     name: "Peach",      background: "#100b08", foreground: "#f5e0d0", sidebar: "#140e0a", accent: "#2e2018" },
+  { id: "sky",       name: "Sky",        background: "#080b10", foreground: "#d0e5f5", sidebar: "#0a0d14", accent: "#18222e" },
+  { id: "cream",     name: "Cream",      background: "#0f0d08", foreground: "#f5f0d0", sidebar: "#13100b", accent: "#2e2a18" },
+  { id: "rose",      name: "Rose",       background: "#100810", foreground: "#f0d0e8", sidebar: "#140b14", accent: "#2e1828" },
+  { id: "sage",      name: "Sage",       background: "#0a0d0a", foreground: "#d5e8d5", sidebar: "#0d100d", accent: "#1e2a1e" },
 ];
 
 export const DEFAULT_THEME_ID = "black";
