@@ -181,7 +181,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               );
             })}
 
-            {isTitle && loading && (
+            {isTitle && loading && items.length === 0 && (
               <div className="flex flex-col gap-4 mt-6">
                 <Skeleton className="h-3 w-24" />
                 <Skeleton className="h-3 w-20" />
