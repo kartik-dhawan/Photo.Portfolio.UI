@@ -26,7 +26,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((s) => s.nav);
   const { isAuthenticated, uid: authUid, role } = useAppSelector((s) => s.auth);
-  const { displayName, tagline, userId: tenantUserId } = useTenant();
+  const { displayName, tagline, userId: tenantUserId, prefixRoute } = useTenant();
   const isAdmin = isAuthenticated && (role === "superAdmin" || authUid === tenantUserId);
   const pathname = usePathname();
   const [isAdding, setIsAdding] = useState(false);
@@ -72,7 +72,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             className={`${spacing} ${isFooter ? 'flex flex-col gap-3' : ''}`}
           >
             {sectionItems.map((item) => {
-              const isActive = pathname === item.route;
+              const isActive = pathname === prefixRoute(item.route);
 
               if (item.isNotLink) {
                 return <div key={item.id}>{item.label}</div>;
@@ -82,7 +82,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 return (
                   <div key={item.id} className="flex items-start gap-2">
                     <Link
-                      href={item.route}
+                      href={prefixRoute(item.route)}
                       onClick={onNavigate}
                       className="block uppercase tracking-wider text-white text-xs xl:text-sm font-bold leading-tight"
                     >
@@ -101,7 +101,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   className="group flex items-center gap-1.5 py-1"
                 >
                   <Link
-                    href={item.route}
+                    href={prefixRoute(item.route)}
                     onClick={onNavigate}
                     className={`transition-colors flex-1 ${
                       isActive ? 'text-white' : 'text-zinc-400 hover:text-white'

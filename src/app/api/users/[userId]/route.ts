@@ -39,6 +39,10 @@ export async function PATCH(
     delete data.username;
     delete data.role;
     delete data.createdAt;
+    // Only superAdmin can set customDomain
+    if (authUser.role !== "superAdmin") {
+      delete data.customDomain;
+    }
 
     await updateUser(userId, data);
     return Response.json({ success: true });

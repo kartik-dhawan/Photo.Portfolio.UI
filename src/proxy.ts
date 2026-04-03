@@ -18,7 +18,7 @@ export function proxy(request: NextRequest) {
 
   // Skip static paths
   const firstSegment = segments[0];
-  const staticPaths = ["api", "_next", "favicon.ico", "home-meta-image.png", "sitemap.xml", "robots.txt", "manifest.webmanifest"];
+  const staticPaths = ["api", "_next", "favicon.ico", "home-meta-image.png", "sitemap.xml", "robots.txt", "manifest.webmanifest", "admin"];
   if (firstSegment && staticPaths.includes(firstSegment)) {
     return NextResponse.next();
   }
