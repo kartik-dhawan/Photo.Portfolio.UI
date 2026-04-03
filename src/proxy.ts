@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const MAIN_DOMAIN = process.env.NEXT_PUBLIC_MAIN_DOMAIN ?? "localhost";
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
+
+// Custom domain → username mapping (synced manually or via edge config)
+// Format: "customdomain.com": "username"
+const DOMAIN_MAP: Record<string, string> = JSON.parse(
+  process.env.DOMAIN_MAP ?? "{}"
+);
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get("host") ?? "";
+  const domain = hostname.split(":")[0];
 
   const segments = pathname.split("/").filter(Boolean);
 
@@ -14,17 +23,38 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Root / → default user's home
-  if (segments.length === 0) {
+  const isMainDomain =
+    domain === MAIN_DOMAIN ||
+    domain === "localhost" ||
+    domain.endsWith(".vercel.app");
+
+  if (isMainDomain) {
+    // Root / → default user's home
+    if (segments.length === 0) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${DEFAULT_USERNAME}`;
+      return NextResponse.rewrite(url);
+    }
+    // Let [username] layout handle the rest
+    return NextResponse.next();
+  }
+
+  // Custom domain — resolve username from DOMAIN_MAP
+  const mappedUsername = DOMAIN_MAP[domain];
+  if (mappedUsername) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${DEFAULT_USERNAME}`;
+    if (segments.length === 0) {
+      url.pathname = `/${mappedUsername}`;
+    } else {
+      url.pathname = `/${mappedUsername}/${segments.join("/")}`;
+    }
     return NextResponse.rewrite(url);
   }
 
-  // Let everything else through to [username] layout
-  // The layout resolves: if first segment is a user → their portfolio
-  // If not a user → treat as slug for default user
-  return NextResponse.next();
+  // Unknown domain — show default
+  const url = request.nextUrl.clone();
+  url.pathname = `/${DEFAULT_USERNAME}${pathname}`;
+  return NextResponse.rewrite(url);
 }
 
 export const config = {
