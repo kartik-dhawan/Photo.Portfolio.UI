@@ -1,12 +1,14 @@
 import { Metadata } from "next";
 import { getAllBrands } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
+import { getDefaultUserId } from "@/lib/tenant";
 import AboutContent from "@/components/content/AboutContent";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSettings();
+  const userId = await getDefaultUserId();
+  const settings = await getSettings(userId);
   const description = "I'm Kartik Dhawan — a photographer and videographer based in India. Specializing in portraits, brand storytelling, and cinematic video work.";
 
   const images = settings.profilePhotoUrl
@@ -31,9 +33,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
+  const userId = await getDefaultUserId();
   const [brands, settings] = await Promise.all([
-    getAllBrands(),
-    getSettings(),
+    getAllBrands(userId),
+    getSettings(userId),
   ]);
 
   return (

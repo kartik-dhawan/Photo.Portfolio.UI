@@ -1,8 +1,12 @@
 import { getAllBrands } from "@/lib/content";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const brands = await getAllBrands();
+    const userId = new URL(request.url).searchParams.get("userId");
+    if (!userId) {
+      return Response.json({ error: "userId is required" }, { status: 400 });
+    }
+    const brands = await getAllBrands(userId);
     return Response.json(brands);
   } catch (err: unknown) {
     const message =

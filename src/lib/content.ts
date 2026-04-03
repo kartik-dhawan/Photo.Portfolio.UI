@@ -3,23 +3,29 @@ import { Brand, ContentBlock, PageContent, CollectionItem, CollectionsResponse }
 
 const COLLECTION = "portfolio_content";
 
+function contentDocId(userId: string, slug: string): string {
+  return `${userId}_${slug}`;
+}
+
 export async function getPageContent(
+  userId: string,
   slug: string
 ): Promise<PageContent | null> {
   const db = getAdminDb();
-  const doc = await db.collection(COLLECTION).doc(slug).get();
+  const doc = await db.collection(COLLECTION).doc(contentDocId(userId, slug)).get();
   if (!doc.exists) return null;
   return { slug, ...doc.data() } as PageContent;
 }
 
 export async function savePageContent(
+  userId: string,
   slug: string,
   blocks: ContentBlock[],
   brands?: Brand[]
 ): Promise<void> {
   const db = getAdminDb();
   const now = new Date().toISOString();
-  const ref = db.collection(COLLECTION).doc(slug);
+  const ref = db.collection(COLLECTION).doc(contentDocId(userId, slug));
   const existing = await ref.get();
 
   if (existing.exists) {
@@ -31,6 +37,7 @@ export async function savePageContent(
   } else {
     await ref.set({
       slug,
+      userId,
       blocks,
       brands: brands ?? [],
       tags: [],
@@ -42,17 +49,19 @@ export async function savePageContent(
 }
 
 export async function updatePageSettings(
+  userId: string,
   slug: string,
   settings: { brands: Brand[]; tags: string[]; filmedAt: string }
 ): Promise<void> {
   const db = getAdminDb();
-  const ref = db.collection(COLLECTION).doc(slug);
+  const ref = db.collection(COLLECTION).doc(contentDocId(userId, slug));
   const existing = await ref.get();
   if (existing.exists) {
     await ref.update({ brands: settings.brands, tags: settings.tags, filmedAt: settings.filmedAt });
   } else {
     await ref.set({
       slug,
+      userId,
       blocks: [],
       brands: settings.brands,
       tags: settings.tags,
@@ -68,11 +77,11 @@ export interface BrandWithProject extends Brand {
   projectName: string;
 }
 
-export async function getAllBrands(): Promise<BrandWithProject[]> {
+export async function getAllBrands(userId: string): Promise<BrandWithProject[]> {
   const db = getAdminDb();
   const [contentSnapshot, routesSnapshot] = await Promise.all([
-    db.collection(COLLECTION).get(),
-    db.collection("portfolio_routes").get(),
+    db.collection(COLLECTION).where("userId", "==", userId).get(),
+    db.collection("portfolio_routes").where("userId", "==", userId).get(),
   ]);
 
   const routeMap = new Map<string, { label: string; hidden: boolean }>();
@@ -86,7 +95,7 @@ export async function getAllBrands(): Promise<BrandWithProject[]> {
 
   for (const doc of contentSnapshot.docs) {
     const data = doc.data();
-    const slug = doc.id;
+    const slug = data.slug as string;
     const brandsList = data.brands as Brand[] | undefined;
     if (!brandsList?.length) continue;
     const route = routeMap.get(slug);
@@ -114,16 +123,16 @@ export interface ProjectCard {
   pinned?: boolean;
 }
 
-export async function getProjectCards(): Promise<ProjectCard[]> {
+export async function getProjectCards(userId: string): Promise<ProjectCard[]> {
   const db = getAdminDb();
   const [contentSnapshot, routesSnapshot] = await Promise.all([
-    db.collection(COLLECTION).get(),
-    db.collection("portfolio_routes").orderBy("order", "asc").get(),
+    db.collection(COLLECTION).where("userId", "==", userId).get(),
+    db.collection("portfolio_routes").where("userId", "==", userId).orderBy("order", "asc").get(),
   ]);
 
   const contentMap = new Map<string, { thumbnail?: string; tags?: string[]; filmedAt?: string; brandNames?: string[] }>();
   for (const doc of contentSnapshot.docs) {
-    const data = doc.data() as PageContent;
+    const data = doc.data() as PageContent & { slug: string };
     let thumb: string | undefined;
     for (const block of data.blocks ?? []) {
       if (block.type === "image") {
@@ -131,7 +140,7 @@ export async function getProjectCards(): Promise<ProjectCard[]> {
         if (img) { thumb = img.url; break; }
       }
     }
-    contentMap.set(doc.id, {
+    contentMap.set(data.slug, {
       thumbnail: thumb,
       tags: data.tags,
       filmedAt: data.filmedAt,
@@ -157,7 +166,6 @@ export async function getProjectCards(): Promise<ProjectCard[]> {
     });
   }
 
-  // Pinned projects first, then original order
   cards.sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
@@ -168,13 +176,14 @@ export async function getProjectCards(): Promise<ProjectCard[]> {
 }
 
 export async function getAllMedia(
+  userId: string,
   page: number = 1,
   pageSize: number = 30
 ): Promise<CollectionsResponse> {
   const db = getAdminDb();
   const [contentSnapshot, routesSnapshot] = await Promise.all([
-    db.collection(COLLECTION).get(),
-    db.collection("portfolio_routes").get(),
+    db.collection(COLLECTION).where("userId", "==", userId).get(),
+    db.collection("portfolio_routes").where("userId", "==", userId).get(),
   ]);
 
   const routeMap = new Map<string, { label: string; hidden: boolean }>();
@@ -187,11 +196,11 @@ export async function getAllMedia(
   const allItems: CollectionItem[] = [];
 
   for (const doc of contentSnapshot.docs) {
-    const slug = doc.id;
+    const data = doc.data() as PageContent & { slug: string };
+    const slug = data.slug;
     const route = routeMap.get(slug);
     if (route?.hidden) continue;
     const projectName = route?.label ?? slug;
-    const data = doc.data() as PageContent;
 
     for (const block of data.blocks ?? []) {
       if (block.type !== "image") continue;
@@ -208,7 +217,6 @@ export async function getAllMedia(
     }
   }
 
-  // Sort by date descending, undated items last
   allItems.sort((a, b) => {
     if (a.date && b.date) return b.date.localeCompare(a.date);
     if (a.date) return -1;

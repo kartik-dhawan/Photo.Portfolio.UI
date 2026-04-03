@@ -1,9 +1,15 @@
 import { getSupabaseAdmin } from "@/supabase/admin";
+import { verifyAuth } from "@/lib/auth";
 
 const BUCKET = "photo-portfolio";
 
 export async function POST(request: Request) {
   try {
+    const authUser = await verifyAuth(request);
+    if (!authUser) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { urls } = (await request.json()) as { urls: string[] };
     if (!urls?.length) {
       return Response.json({ error: "urls required" }, { status: 400 });

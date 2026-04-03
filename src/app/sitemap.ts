@@ -1,10 +1,13 @@
 import { MetadataRoute } from "next";
 import { getNavItems } from "@/lib/navItems";
+import { getDefaultUserId } from "@/lib/tenant";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kartikdhawan.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const navItems = await getNavItems();
+  const userId = await getDefaultUserId();
+  if (!userId) return [];
+  const navItems = await getNavItems(userId);
 
   const projectPages = navItems
     .filter((item) => !item.hidden)

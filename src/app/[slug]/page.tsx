@@ -1,13 +1,15 @@
 import { Metadata } from "next";
 import { getNavItems } from "@/lib/navItems";
 import { getPageContent } from "@/lib/content";
-import { PageContent as PageContentType } from "@/store/content/types";
+import { getDefaultUserId } from "@/lib/tenant";
 import PageContent from "@/components/content/PageContent";
 
 export const revalidate = 60;
 
 export async function generateStaticParams() {
-  const navItems = await getNavItems();
+  const userId = await getDefaultUserId();
+  if (!userId) return [];
+  const navItems = await getNavItems(userId);
   return navItems.map((item) => ({
     slug: item.route.replace(/^\//, ""),
   }));
@@ -19,15 +21,17 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const userId = await getDefaultUserId();
+  if (!userId) return { title: slug };
+
   const [content, navItems] = await Promise.all([
-    getPageContent(slug),
-    getNavItems(),
+    getPageContent(userId, slug),
+    getNavItems(userId),
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
   const title = navItem?.label ?? slug;
 
-  // First image from content blocks
   let ogImage: string | undefined;
   for (const block of content?.blocks ?? []) {
     if (block.type === "image") {
@@ -36,7 +40,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  // First text block as description
   let description = `${title} — Photography & videography by Kartik Dhawan`;
   for (const block of content?.blocks ?? []) {
     if (block.type === "richtext" && block.markdown) {
@@ -71,9 +74,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SectionPage({ params }: PageProps) {
   const { slug } = await params;
+  const userId = await getDefaultUserId();
   const [content, navItems] = await Promise.all([
-    getPageContent(slug),
-    getNavItems(),
+    getPageContent(userId, slug),
+    getNavItems(userId),
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);

@@ -1,13 +1,14 @@
-import { getAdminDb } from '../firebase/admin';
-import { FirestoreNavItem } from './types';
+import { getAdminDb } from "../firebase/admin";
+import { FirestoreNavItem } from "./types";
 
-const COLLECTION = 'portfolio_routes';
+const COLLECTION = "portfolio_routes";
 
-export async function getNavItems(): Promise<FirestoreNavItem[]> {
+export async function getNavItems(userId: string): Promise<FirestoreNavItem[]> {
   const db = getAdminDb();
   const snapshot = await db
     .collection(COLLECTION)
-    .orderBy('order', 'asc')
+    .where("userId", "==", userId)
+    .orderBy("order", "asc")
     .get();
   return snapshot.docs.map(
     (d) => ({ id: d.id, ...d.data() } as FirestoreNavItem)
@@ -15,16 +16,19 @@ export async function getNavItems(): Promise<FirestoreNavItem[]> {
 }
 
 export async function addNavItem(
-  item: Omit<FirestoreNavItem, 'id'>
+  userId: string,
+  item: Omit<FirestoreNavItem, "id">
 ): Promise<string> {
   const db = getAdminDb();
-  const docRef = await db.collection(COLLECTION).add(item);
+  const docRef = await db
+    .collection(COLLECTION)
+    .add({ ...item, userId });
   return docRef.id;
 }
 
 export async function updateNavItem(
   id: string,
-  data: Partial<Omit<FirestoreNavItem, 'id'>>
+  data: Partial<Omit<FirestoreNavItem, "id">>
 ): Promise<void> {
   const db = getAdminDb();
   await db.collection(COLLECTION).doc(id).update(data);

@@ -1,19 +1,18 @@
 import { getAdminDb } from "@/firebase/admin";
 
-const DOC_PATH = "portfolio_settings/general";
-
-export async function getSettings(): Promise<{ profilePhotoUrl: string }> {
+export async function getSettings(userId: string): Promise<{ profilePhotoUrl: string }> {
   const db = getAdminDb();
-  const doc = await db.doc(DOC_PATH).get();
+  const doc = await db.doc(`portfolio_settings/${userId}`).get();
   if (!doc.exists) return { profilePhotoUrl: "" };
   return doc.data() as { profilePhotoUrl: string };
 }
 
 export async function updateSettings(
+  userId: string,
   data: Partial<{ profilePhotoUrl: string }>
 ): Promise<void> {
   const db = getAdminDb();
-  const ref = db.doc(DOC_PATH);
+  const ref = db.doc(`portfolio_settings/${userId}`);
   const existing = await ref.get();
   if (existing.exists) {
     await ref.update(data);

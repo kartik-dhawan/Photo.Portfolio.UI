@@ -1,13 +1,21 @@
 import { updatePageSettings } from "@/lib/content";
+import { verifyAuth } from "@/lib/auth";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const authUser = await verifyAuth(request);
+    if (!authUser) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { slug } = await params;
-    const { brands, tags, filmedAt } = await request.json();
-    await updatePageSettings(slug, { brands, tags, filmedAt: filmedAt ?? "" });
+    const { brands, tags, filmedAt, userId } = await request.json();
+    const targetUserId = userId ?? authUser.uid;
+
+    await updatePageSettings(targetUserId, slug, { brands, tags, filmedAt: filmedAt ?? "" });
     return Response.json({ success: true });
   } catch (err: unknown) {
     const message =

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getAllMedia, getProjectCards } from '@/lib/content';
+import { getDefaultUserId } from '@/lib/tenant';
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -24,9 +25,10 @@ export const revalidate = 60;
 const PAGE_SIZE = 20;
 
 export default async function Home() {
+  const userId = await getDefaultUserId();
   const [{ items, total }, projects] = await Promise.all([
-    getAllMedia(1, PAGE_SIZE),
-    getProjectCards(),
+    getAllMedia(userId, 1, PAGE_SIZE),
+    getProjectCards(userId),
   ]);
 
   return (
