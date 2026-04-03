@@ -127,6 +127,7 @@ export default function AdminUsersTable({ initialUsers }: Props) {
               heroTitle: editUser.heroTitle,
               heroSubtitle: editUser.heroSubtitle,
               aboutText: editUser.aboutText,
+              themeId: editUser.themeId ?? "black",
               customDomainEnabled: !!editUser.customDomain,
             }}
             onSaved={() => {

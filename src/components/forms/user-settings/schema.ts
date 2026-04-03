@@ -6,6 +6,7 @@ export const userSettingsSchema = yup.object({
   heroTitle: yup.string().trim().default(""),
   heroSubtitle: yup.string().trim().default(""),
   aboutText: yup.string().trim().default(""),
+  themeId: yup.string().trim().default("black"),
   customDomainEnabled: yup.boolean().default(false),
 });
 

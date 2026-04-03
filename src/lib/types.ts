@@ -15,6 +15,7 @@ export interface UserProfile {
   socials: SocialLink[];
   heroTitle: string;
   heroSubtitle: string;
+  themeId: string;
   createdAt: string;
   updatedAt: string;
 }

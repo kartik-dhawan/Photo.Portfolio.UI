@@ -32,6 +32,7 @@ export default async function SettingsPage({ params }: PageProps) {
           heroTitle: user.heroTitle,
           heroSubtitle: user.heroSubtitle,
           aboutText: user.aboutText,
+          themeId: user.themeId ?? "black",
           customDomainEnabled: !!user.customDomain,
         }}
       />

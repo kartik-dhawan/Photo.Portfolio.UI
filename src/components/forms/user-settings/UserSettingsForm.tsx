@@ -6,6 +6,7 @@ import { useAppSelector } from "@/store";
 import { getAuthToken } from "@/store/auth/slice";
 import { useState } from "react";
 import { userSettingsSchema, UserSettingsFormValues } from "./schema";
+import ThemePicker from "./ThemePicker";
 
 interface Props {
   userId: string;
@@ -24,6 +25,8 @@ export default function UserSettingsForm({ userId, defaultValues, targetRole, on
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<UserSettingsFormValues>({
     resolver: yupResolver(userSettingsSchema),
@@ -106,6 +109,11 @@ export default function UserSettingsForm({ userId, defaultValues, targetRole, on
           placeholder="Separate paragraphs with blank lines"
         />
       </div>
+
+      <ThemePicker
+        value={watch("themeId")}
+        onChange={(id) => setValue("themeId", id, { shouldDirty: true })}
+      />
 
       {isSuperAdmin && (
         <div className="border-t border-zinc-800 pt-4">

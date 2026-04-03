@@ -4,6 +4,7 @@ import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import OnboardingForm from "@/components/OnboardingForm";
+import Footer from "@/components/Footer";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -62,6 +63,7 @@ export default function RootLayout({
         <StoreProvider>
           <OnboardingForm />
           {children}
+          <Footer />
         </StoreProvider>
       </body>
     </html>

@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import SocialLinks from "@/components/SocialLinks";
 import TenantProvider from "@/components/TenantProvider";
+import ThemeProvider from "@/components/ThemeProvider";
 
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
 
@@ -62,6 +63,7 @@ export default async function UsernameLayout({ children, params }: LayoutProps) 
 
   return (
     <TenantProvider userId={user.uid} username={user.username} displayName={user.displayName} tagline={user.tagline} hasCustomDomain={!!user.customDomain}>
+      <ThemeProvider themeId={user.themeId ?? "black"}>
       <MobileNav displayName={user.displayName} />
       <div className="flex min-h-screen">
         <aside className="hidden md:flex flex-col w-64 shrink-0 px-8 pt-12 pb-8 sticky top-0 h-screen overflow-y-auto border-r border-zinc-800/50">
@@ -72,6 +74,7 @@ export default async function UsernameLayout({ children, params }: LayoutProps) 
         </main>
       </div>
       <SocialLinks />
+      </ThemeProvider>
     </TenantProvider>
   );
 }

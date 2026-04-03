@@ -49,6 +49,7 @@ export async function createUser(data: {
     aboutText: "",
     socials: [],
     heroTitle: "",
+    themeId: "black",
     heroSubtitle: "",
     createdAt: now,
     updatedAt: now,
