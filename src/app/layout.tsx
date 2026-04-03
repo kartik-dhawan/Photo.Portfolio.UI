@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Caveat, Sarina } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import OnboardingForm from "@/components/OnboardingForm";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -59,6 +60,7 @@ export default function RootLayout({
       <GoogleAnalytics />
       <body className="min-h-full font-mono bg-black text-white">
         <StoreProvider>
+          <OnboardingForm />
           {children}
         </StoreProvider>
       </body>
