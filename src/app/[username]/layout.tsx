@@ -1,7 +1,5 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { getUserByUsername } from "@/lib/users";
-import { getNavItems } from "@/lib/navItems";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import SocialLinks from "@/components/SocialLinks";
@@ -14,9 +12,20 @@ interface LayoutProps {
   params: Promise<{ username: string }>;
 }
 
+async function resolveUser(username: string) {
+  // First try as a username
+  const user = await getUserByUsername(username);
+  if (user) return { user, isDefaultFallback: false };
+
+  // Not a user — fall back to default user
+  // This means the "username" segment is actually a slug (e.g. /portraits)
+  const defaultUser = await getUserByUsername(DEFAULT_USERNAME);
+  return { user: defaultUser, isDefaultFallback: true };
+}
+
 export async function generateMetadata({ params }: LayoutProps): Promise<Metadata> {
   const { username } = await params;
-  const user = await getUserByUsername(username);
+  const { user } = await resolveUser(username);
   if (!user) return { title: "Not Found" };
 
   return {
@@ -41,23 +50,12 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
 
 export default async function UsernameLayout({ children, params }: LayoutProps) {
   const { username } = await params;
-  const user = await getUserByUsername(username);
+  const { user } = await resolveUser(username);
 
   if (!user) {
-    // Maybe this "username" is actually a slug for the default user (old URL format)
-    const defaultUser = await getUserByUsername(DEFAULT_USERNAME);
-    if (defaultUser) {
-      const navItems = await getNavItems(defaultUser.uid);
-      const matchesSlug = navItems.some(
-        (item) => item.route === `/${username}` || item.route === `/${username}/`
-      );
-      if (matchesSlug || username === "about") {
-        redirect(`/${DEFAULT_USERNAME}/${username}`);
-      }
-    }
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-zinc-600 text-sm font-mono">User not found</p>
+        <p className="text-zinc-600 text-sm font-mono">Not found</p>
       </div>
     );
   }
