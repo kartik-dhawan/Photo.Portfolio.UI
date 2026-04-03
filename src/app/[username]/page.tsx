@@ -7,6 +7,7 @@ import StickyHeader from "@/components/common/StickyHeader";
 import ProjectsGrid from "@/components/content/ProjectsGrid";
 import CollectionsGrid from "@/components/content/CollectionsGrid";
 import PageContent from "@/components/content/PageContent";
+import AdminRedirect from "@/components/AdminRedirect";
 
 export const revalidate = 60;
 
@@ -33,6 +34,7 @@ export default async function UserHomePage({ params }: PageProps) {
 
     return (
       <div className="flex flex-col">
+        <AdminRedirect />
         <StickyHeader title={heroTitle} />
         <div className="relative flex flex-col min-h-[80vh] overflow-hidden px-6 md:px-8 pt-12 md:pt-20">
           <div className="absolute inset-0">
