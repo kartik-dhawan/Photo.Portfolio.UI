@@ -15,7 +15,6 @@ export default function ThemeProvider({ themeId, children }: Props) {
     root.style.setProperty("--background", theme.background);
     root.style.setProperty("--foreground", theme.foreground);
     root.style.setProperty("--sidebar", theme.sidebar);
-    root.style.setProperty("--accent", theme.accent);
     document.body.style.background = theme.background;
     document.body.style.color = theme.foreground;
   }, [themeId]);

@@ -2,10 +2,9 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #000000;
+  --background: #0a0a0a;
   --foreground: #ededed;
-  --sidebar: #0a0a0a;
-  --accent: #1e1e1e;
+  --sidebar: #000000;
 }
 
 @theme inline {
