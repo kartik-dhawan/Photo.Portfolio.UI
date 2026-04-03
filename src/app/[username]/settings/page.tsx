@@ -19,7 +19,7 @@ export default async function SettingsPage({ params }: PageProps) {
   if (!user) return null;
 
   return (
-    <div className="min-h-[80vh] py-12 px-3 md:px-6 xl:px-24">
+    <div className="min-h-[80vh] py-12 px-5 md:px-6 xl:px-24">
       <h1 className="text-white text-2xl font-mono uppercase tracking-wider mb-8">
         Settings
       </h1>
