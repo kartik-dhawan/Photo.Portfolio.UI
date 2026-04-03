@@ -10,10 +10,11 @@ import { userSettingsSchema, UserSettingsFormValues } from "./schema";
 interface Props {
   userId: string;
   defaultValues: UserSettingsFormValues;
+  targetRole?: string;
   onSaved?: () => void;
 }
 
-export default function UserSettingsForm({ userId, defaultValues, onSaved }: Props) {
+export default function UserSettingsForm({ userId, defaultValues, targetRole, onSaved }: Props) {
   const { role } = useAppSelector((s) => s.auth);
   const isSuperAdmin = role === "superAdmin";
   const [saving, setSaving] = useState(false);
@@ -112,10 +113,13 @@ export default function UserSettingsForm({ userId, defaultValues, onSaved }: Pro
             <input
               {...register("customDomainEnabled")}
               type="checkbox"
-              className="w-4 h-4 accent-white cursor-pointer"
+              className="w-4 h-4 accent-white cursor-pointer disabled:opacity-50"
+              disabled={targetRole === "superAdmin"}
+              checked={targetRole === "superAdmin" ? true : undefined}
             />
             <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
-              Custom Domain Enabled (Super Admin only)
+              Custom Domain Enabled
+              {targetRole === "superAdmin" && " (always on for super admin)"}
             </span>
           </label>
         </div>

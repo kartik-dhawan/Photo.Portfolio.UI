@@ -32,10 +32,11 @@ interface Props {
   username: string;
   displayName: string;
   tagline: string;
+  hasCustomDomain: boolean;
   children: React.ReactNode;
 }
 
-export default function TenantProvider({ userId, username, displayName, tagline, children }: Props) {
+export default function TenantProvider({ userId, username, displayName, tagline, hasCustomDomain, children }: Props) {
   const dispatch = useAppDispatch();
   const lastFetched = useRef("");
 
@@ -46,10 +47,12 @@ export default function TenantProvider({ userId, username, displayName, tagline,
     }
   }, [dispatch, userId]);
 
-  // Default user gets clean URLs (/slug), others get /{username}/slug
+  // Clean URLs (/slug) for: superAdmin (default user) + custom domain users
+  // Prefixed URLs (/{username}/slug) for: regular users without custom domain
   const isDefaultUser = username === DEFAULT_USERNAME;
+  const usesCleanUrls = isDefaultUser || hasCustomDomain;
   const prefixRoute = (route: string) =>
-    isDefaultUser ? route : `/${username}${route}`;
+    usesCleanUrls ? route : `/${username}${route}`;
 
   return (
     <TenantContext.Provider value={{ userId, username, displayName, tagline, prefixRoute }}>

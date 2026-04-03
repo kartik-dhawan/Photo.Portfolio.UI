@@ -61,7 +61,7 @@ export default async function UsernameLayout({ children, params }: LayoutProps) 
   }
 
   return (
-    <TenantProvider userId={user.uid} username={user.username} displayName={user.displayName} tagline={user.tagline}>
+    <TenantProvider userId={user.uid} username={user.username} displayName={user.displayName} tagline={user.tagline} hasCustomDomain={!!user.customDomain}>
       <MobileNav displayName={user.displayName} />
       <div className="flex min-h-screen">
         <aside className="hidden md:flex flex-col w-64 shrink-0 px-8 pt-12 pb-8 sticky top-0 h-screen overflow-y-auto border-r border-zinc-800/50">

@@ -25,6 +25,7 @@ export default async function SettingsPage({ params }: PageProps) {
       </h1>
       <UserSettingsForm
         userId={user.uid}
+        targetRole={user.role}
         defaultValues={{
           displayName: user.displayName,
           tagline: user.tagline,

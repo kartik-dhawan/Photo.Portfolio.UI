@@ -120,6 +120,7 @@ export default function AdminUsersTable({ initialUsers }: Props) {
         editUser && (
           <UserSettingsForm
             userId={editUser.uid}
+            targetRole={editUser.role}
             defaultValues={{
               displayName: editUser.displayName,
               tagline: editUser.tagline,
