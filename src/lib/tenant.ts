@@ -1,16 +1,16 @@
-import { getUserByUsername } from "./users";
+import { getUserByUsername, getUserByUid } from "./users";
 
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
+const DEFAULT_USER_ID = process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "";
 
 /**
- * Get the default (super admin) user ID.
- * Used during the transition period before full multi-tenant routing.
+ * Get the default user ID.
+ * Checks DEFAULT_USER_ID first (direct), then falls back to username lookup.
  */
 export async function getDefaultUserId(): Promise<string> {
+  if (DEFAULT_USER_ID) return DEFAULT_USER_ID;
   const user = await getUserByUsername(DEFAULT_USERNAME);
   if (user) return user.uid;
-  // Fallback: if user doc doesn't exist yet (pre-migration), return empty string
-  // This allows pages to compile but they won't return data until migration runs
   return "";
 }
 
