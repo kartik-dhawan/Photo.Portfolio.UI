@@ -8,11 +8,11 @@ import { LoginFormValues } from "@/components/forms/auth/schema";
 
 export default function LoginButton() {
   const dispatch = useAppDispatch();
-  const { isAdmin } = useAppSelector((s) => s.auth);
+  const { isAuthenticated } = useAppSelector((s) => s.auth);
   const [showForm, setShowForm] = useState(false);
   const [serverError, setServerError] = useState("");
 
-  if (isAdmin) {
+  if (isAuthenticated) {
     return (
       <button
         onClick={() => dispatch(logout())}

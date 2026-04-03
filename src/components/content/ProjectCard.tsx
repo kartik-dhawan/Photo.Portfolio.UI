@@ -12,7 +12,7 @@ interface Props {
 
 export default function ProjectCard({ project }: Props) {
   const dispatch = useAppDispatch();
-  const { isAdmin } = useAppSelector((s) => s.auth);
+  const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
   const { items: navItems } = useAppSelector((s) => s.nav);
 
   const navItem = navItems.find((n) => n.route === `/${project.slug}`);

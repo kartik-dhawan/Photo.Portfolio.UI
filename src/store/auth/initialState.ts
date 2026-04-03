@@ -1,6 +1,10 @@
 import { AuthState } from "./types";
 
 export const initialState: AuthState = {
-  isAdmin: false,
+  uid: null,
+  username: null,
+  role: null,
+  isAuthenticated: false,
   loading: true,
+  token: null,
 };

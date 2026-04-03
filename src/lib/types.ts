@@ -1,4 +1,23 @@
 import { ReactNode } from "react";
+import { SocialLink } from "./socials";
+
+export type UserRole = "superAdmin" | "admin";
+
+export interface UserProfile {
+  uid: string;
+  username: string;
+  displayName: string;
+  tagline: string;
+  email: string;
+  role: UserRole;
+  customDomain: string | null;
+  aboutText: string;
+  socials: SocialLink[];
+  heroTitle: string;
+  heroSubtitle: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface NavItem {
   id: string;
@@ -10,6 +29,7 @@ export interface NavItem {
   order: number;
   pinned?: boolean;
   hideFromHome?: boolean;
+  userId?: string;
 }
 
 export type FirestoreNavItem = Omit<NavItem, "label"> & { label: string };

@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function ProfilePhoto({ initialUrl }: Props) {
-  const { isAdmin } = useAppSelector((s) => s.auth);
+  const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
   const [photoUrl, setPhotoUrl] = useState(initialUrl);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);

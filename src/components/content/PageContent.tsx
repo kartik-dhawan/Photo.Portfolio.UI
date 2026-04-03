@@ -48,7 +48,7 @@ export default function PageContent({
   initialRouteId,
 }: Props) {
   const dispatch = useAppDispatch();
-  const { isAdmin } = useAppSelector((s) => s.auth);
+  const { isAuthenticated: isAdmin } = useAppSelector((s) => s.auth);
   const { items: navItems } = useAppSelector((s) => s.nav);
   const { pages, drafts, loading, saving, error } = useAppSelector(
     (s) => s.content

@@ -1,4 +1,10 @@
+import { UserRole } from "@/lib/types";
+
 export interface AuthState {
-  isAdmin: boolean;
+  uid: string | null;
+  username: string | null;
+  role: UserRole | null;
+  isAuthenticated: boolean;
   loading: boolean;
+  token: string | null;
 }
