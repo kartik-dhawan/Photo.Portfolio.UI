@@ -1,13 +1,18 @@
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
 import { getSupabaseClient } from "@/supabase/client";
+import { getAuthToken } from "@/store/auth";
 
 export async function uploadToStorage(
   slug: string,
   file: File
 ): Promise<{ publicUrl: string; path: string; type: "image" | "video" }> {
+  const authToken = getAuthToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
   const res = await fetch(CONTENT_API_ROUTES.upload, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       slug,
       fileName: file.name,
