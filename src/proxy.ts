@@ -46,10 +46,11 @@ export function proxy(request: NextRequest) {
   }
 
   // Check if this is a custom domain
+  const hasDomainMapping = !!DOMAIN_MAP[domain];
   const isMainDomain =
     domain === MAIN_DOMAIN ||
     domain === "localhost" ||
-    domain.endsWith(".vercel.app");
+    (domain.endsWith(".vercel.app") && !hasDomainMapping);
 
   console.log("Domain classification:", { domain, isMainDomain, MAIN_DOMAIN });
 
