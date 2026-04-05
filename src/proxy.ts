@@ -30,6 +30,15 @@ export function proxy(request: NextRequest) {
   const segments = pathname.split("/").filter(Boolean);
   const firstSegment = segments[0];
 
+  // Debug logging
+  console.log("Proxy debug:", {
+    hostname,
+    domain,
+    domainMapKeys: Object.keys(DOMAIN_MAP),
+    hasDomainMapping: !!DOMAIN_MAP[domain],
+    mappedUsername: DOMAIN_MAP[domain]
+  });
+
   // Skip static paths
   const staticPaths = ["api", "_next", "favicon.ico", "home-meta-image.png", "sitemap.xml", "robots.txt", "manifest.webmanifest"];
   if (firstSegment && staticPaths.includes(firstSegment)) {
@@ -41,6 +50,8 @@ export function proxy(request: NextRequest) {
     domain === MAIN_DOMAIN ||
     domain === "localhost" ||
     domain.endsWith(".vercel.app");
+
+  console.log("Domain classification:", { domain, isMainDomain, MAIN_DOMAIN });
 
   // Custom domain — all paths map to that user
   if (!isMainDomain) {
