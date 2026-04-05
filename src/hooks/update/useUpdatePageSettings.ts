@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
 import { Brand } from "@/store/content";
+import { getAuthToken } from "@/store/auth";
 
 interface PageSettings {
   brands: Brand[];
@@ -15,9 +16,13 @@ export function useUpdatePageSettings(slug: string) {
   const updateSettings = async (settings: PageSettings) => {
     setLoading(true);
     setError("");
+    const token = getAuthToken();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
     const res = await fetch(CONTENT_API_ROUTES.settings(slug), {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(settings),
     });
     setLoading(false);

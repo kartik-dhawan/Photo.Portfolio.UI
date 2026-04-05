@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { API_ROUTES } from "@/routeConfig/apiRoutes";
+import { getAuthToken } from "@/store/auth";
 
 export function useUpdateRouteLabel(routeId: string) {
   const [loading, setLoading] = useState(false);
@@ -8,9 +9,13 @@ export function useUpdateRouteLabel(routeId: string) {
   const updateRoute = async (data: Record<string, unknown>) => {
     setLoading(true);
     setError("");
+    const token = getAuthToken();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
     const res = await fetch(API_ROUTES.update(routeId), {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(data),
     });
     setLoading(false);
