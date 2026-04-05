@@ -1,14 +1,23 @@
 import Script from "next/script";
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const GA_MAP: Record<string, string> = JSON.parse(
+  process.env.NEXT_PUBLIC_GA_MAP ?? process.env.GA_MAP ?? "{}"
+);
 
-export default function GoogleAnalytics() {
-  if (!GA_ID) return null;
+interface GoogleAnalyticsProps {
+  username?: string;
+}
+
+export default function GoogleAnalytics({ username }: GoogleAnalyticsProps) {
+  // Only use GA if user has a specific tag in GA_MAP
+  const gaId = username ? GA_MAP[username] : null;
+
+  if (!gaId) return null;
 
   return (
     <>
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
         strategy="afterInteractive"
       />
       <Script id="google-analytics" strategy="afterInteractive">
@@ -16,7 +25,7 @@ export default function GoogleAnalytics() {
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${GA_ID}');
+          gtag('config', '${gaId}');
         `}
       </Script>
     </>

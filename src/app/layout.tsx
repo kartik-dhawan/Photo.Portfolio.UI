@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Caveat, Sarina } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
 import OnboardingForm from "@/components/OnboardingForm";
 import Footer from "@/components/Footer";
 
@@ -51,14 +50,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} ${caveat.variable} ${sarina.variable} h-full antialiased`}>
-      <GoogleAnalytics />
       <body className="min-h-full font-mono bg-black text-white">
         <StoreProvider>
           <OnboardingForm />
