@@ -70,7 +70,7 @@ export default async function UsernameLayout({ children, params }: LayoutProps) 
   return (
     <>
       <GoogleAnalytics username={user.username} />
-      <TenantProvider userId={user.uid} username={user.username} displayName={user.displayName} tagline={user.tagline} hasCustomDomain={hasCustomDomain}>
+      <TenantProvider userId={user.uid} username={user.username} displayName={user.displayName} tagline={user.tagline} socials={user.socials ?? []} hasCustomDomain={hasCustomDomain}>
         <ThemeProvider themeId={user.themeId ?? "black"}>
           <MobileNav displayName={user.displayName} />
           <div className="flex min-h-screen">

@@ -3,13 +3,14 @@
 import { createContext, useContext, useEffect, useRef } from "react";
 import { useAppDispatch } from "@/store";
 import { fetchNavItems } from "@/store/nav";
+import { SocialLink } from "@/lib/socials";
 
 interface TenantCtx {
   userId: string;
   username: string;
   displayName: string;
   tagline: string;
-  /** Prefix a route path with /{username} if needed */
+  socials: SocialLink[];
   prefixRoute: (route: string) => string;
 }
 
@@ -20,6 +21,7 @@ const TenantContext = createContext<TenantCtx>({
   username: "",
   displayName: "",
   tagline: "",
+  socials: [],
   prefixRoute: (r) => r,
 });
 
@@ -32,11 +34,12 @@ interface Props {
   username: string;
   displayName: string;
   tagline: string;
+  socials: SocialLink[];
   hasCustomDomain: boolean;
   children: React.ReactNode;
 }
 
-export default function TenantProvider({ userId, username, displayName, tagline, hasCustomDomain, children }: Props) {
+export default function TenantProvider({ userId, username, displayName, tagline, socials, hasCustomDomain, children }: Props) {
   const dispatch = useAppDispatch();
   const lastFetched = useRef("");
 
@@ -55,7 +58,7 @@ export default function TenantProvider({ userId, username, displayName, tagline,
     usesCleanUrls ? route : `/${username}${route}`;
 
   return (
-    <TenantContext.Provider value={{ userId, username, displayName, tagline, prefixRoute }}>
+    <TenantContext.Provider value={{ userId, username, displayName, tagline, socials, prefixRoute }}>
       {children}
     </TenantContext.Provider>
   );
