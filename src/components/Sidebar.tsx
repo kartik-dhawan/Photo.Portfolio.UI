@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store';
-import { addNavItem, updateNavItem, removeNavItem } from '@/store/nav';
+import { addNavItem, updateNavItem, removeNavItem, swapOrder } from '@/store/nav';
 import { NavItem } from '@/lib/types';
 import { buildRouteConfig } from '@/routeConfig/routeConfig';
 import { useTenant } from '@/components/TenantProvider';
@@ -32,8 +32,22 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const [isAdding, setIsAdding] = useState(false);
 
   const visibleItems = isAdmin ? items : items.filter((i) => !i.hidden);
+  const firestoreItems = items.filter((i) => !i.id.startsWith('__'));
   const routeConfig = buildRouteConfig(visibleItems, displayName, tagline);
   const sections = groupBySectionName(routeConfig);
+
+  const handleReorder = (itemId: string, direction: 'up' | 'down') => {
+    const idx = firestoreItems.findIndex((i) => i.id === itemId);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= firestoreItems.length) return;
+    const current = firestoreItems[idx];
+    const swap = firestoreItems[swapIdx];
+    // Instant UI update
+    dispatch(swapOrder({ idA: current.id, idB: swap.id }));
+    // Persist to API
+    dispatch(updateNavItem({ id: current.id, data: { order: swap.order } }));
+    dispatch(updateNavItem({ id: swap.id, data: { order: current.order } }));
+  };
 
   const handleAdd = (data: { label: string; sectionName: string }) => {
     const route = data.label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -124,6 +138,28 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   </Link>
                   {isAdmin && isFirestoreItem && (
                     <span className="flex md:hidden group-hover:flex items-center gap-1 shrink-0">
+                      {firestoreItems.findIndex((i) => i.id === item.id) > 0 && (
+                        <button
+                          onClick={() => handleReorder(item.id, 'up')}
+                          className="text-zinc-600 hover:text-zinc-300 transition-colors cursor-pointer"
+                          title="Move up"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="18 15 12 9 6 15" />
+                          </svg>
+                        </button>
+                      )}
+                      {firestoreItems.findIndex((i) => i.id === item.id) < firestoreItems.length - 1 && (
+                        <button
+                          onClick={() => handleReorder(item.id, 'down')}
+                          className="text-zinc-600 hover:text-zinc-300 transition-colors cursor-pointer"
+                          title="Move down"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                      )}
                       <button
                         onClick={() =>
                           dispatch(

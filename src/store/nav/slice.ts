@@ -84,7 +84,19 @@ export const removeNavItem = createAsyncThunk(
 const navSlice = createSlice({
   name: "nav",
   initialState,
-  reducers: {},
+  reducers: {
+    swapOrder(state, action: PayloadAction<{ idA: string; idB: string }>) {
+      const { idA, idB } = action.payload;
+      const a = state.items.find((i) => i.id === idA);
+      const b = state.items.find((i) => i.id === idB);
+      if (a && b) {
+        const tmp = a.order;
+        a.order = b.order;
+        b.order = tmp;
+        state.items.sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchNavItems.pending, (state) => {
@@ -132,4 +144,5 @@ const navSlice = createSlice({
   },
 });
 
+export const { swapOrder } = navSlice.actions;
 export default navSlice.reducer;
