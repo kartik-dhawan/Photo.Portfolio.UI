@@ -53,5 +53,6 @@ export function buildSocialLinks(handles: Record<string, string>) {
       url: `${p.baseUrl}${handles[p.id]}`,
       icon: p.icon,
       handle: `@${handles[p.id]}`,
+      followers: handles[`${p.id}_followers`] || undefined,
     }));
 }

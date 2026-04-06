@@ -74,10 +74,15 @@ export default async function AboutPage({ params }: PageProps) {
         userId={user.uid}
         defaultValues={{
           instagram: socialHandles.instagram ?? "",
+          instagram_followers: socialHandles.instagram_followers ?? "",
           youtube: socialHandles.youtube ?? "",
+          youtube_followers: socialHandles.youtube_followers ?? "",
           twitter: socialHandles.twitter ?? "",
+          twitter_followers: socialHandles.twitter_followers ?? "",
           linkedin: socialHandles.linkedin ?? "",
+          linkedin_followers: socialHandles.linkedin_followers ?? "",
           spotify: socialHandles.spotify ?? "",
+          spotify_followers: socialHandles.spotify_followers ?? "",
         }}
       />
     </div>

@@ -72,24 +72,32 @@ export default function SocialLinksForm({ userId, defaultValues, onSaved }: Prop
       </h3>
 
       {SOCIAL_PLATFORMS.map((platform) => (
-        <div key={platform.id} className="flex items-center gap-0">
-          <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 border-r-0 rounded-l px-3 py-2 shrink-0">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="text-zinc-500 shrink-0"
-            >
-              <path d={platform.icon} />
-            </svg>
-            <span className="text-zinc-500 text-sm font-mono">@</span>
+        <div key={platform.id} className="flex items-center gap-2">
+          <div className="flex items-center gap-0 flex-1">
+            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 border-r-0 rounded-l px-3 py-2 shrink-0">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="text-zinc-500 shrink-0"
+              >
+                <path d={platform.icon} />
+              </svg>
+              <span className="text-zinc-500 text-sm font-mono">@</span>
+            </div>
+            <input
+              {...register(platform.id as keyof SocialLinksFormValues)}
+              type="text"
+              placeholder={platform.name}
+              className={inputClass}
+            />
           </div>
           <input
-            {...register(platform.id as keyof SocialLinksFormValues)}
+            {...register(`${platform.id}_followers` as keyof SocialLinksFormValues)}
             type="text"
-            placeholder={platform.name}
-            className={inputClass}
+            placeholder="e.g. 10.5K"
+            className="bg-transparent border border-zinc-800 rounded px-3 py-2 text-white text-sm font-mono outline-none caret-white placeholder:text-zinc-700 w-24"
           />
         </div>
       ))}
