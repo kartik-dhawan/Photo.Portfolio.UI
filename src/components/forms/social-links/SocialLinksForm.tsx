@@ -50,7 +50,11 @@ export default function SocialLinksForm({ userId, defaultValues, onSaved }: Prop
       });
       if (!res.ok) throw new Error("Failed to save");
       setSuccess(true);
-      onSaved?.();
+      if (onSaved) {
+        onSaved();
+      } else {
+        setTimeout(() => window.location.reload(), 500);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {

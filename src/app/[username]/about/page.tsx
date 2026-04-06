@@ -80,7 +80,6 @@ export default async function AboutPage({ params }: PageProps) {
             linkedin: socialHandles.linkedin ?? "",
             spotify: socialHandles.spotify ?? "",
           }}
-          onSaved={() => window.location.reload()}
         />
       </div>
     </div>
