@@ -3,6 +3,7 @@ import { getUserByUsername } from "@/lib/users";
 import { getAllBrands } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 import AboutContent from "@/components/content/AboutContent";
+import SocialLinksForm from "@/components/forms/social-links/SocialLinksForm";
 
 export const revalidate = 60;
 
@@ -59,6 +60,8 @@ export default async function AboutPage({ params }: PageProps) {
     getSettings(user.uid),
   ]);
 
+  const socialHandles = user.socialHandles ?? {};
+
   return (
     <div className="h-full min-h-[80vh] py-12 px-8">
       <AboutContent
@@ -67,6 +70,19 @@ export default async function AboutPage({ params }: PageProps) {
         aboutText={user.aboutText}
         socials={user.socials}
       />
+      <div className="px-6 xl:px-24 py-12 border-t border-zinc-800 mt-12">
+        <SocialLinksForm
+          userId={user.uid}
+          defaultValues={{
+            instagram: socialHandles.instagram ?? "",
+            youtube: socialHandles.youtube ?? "",
+            twitter: socialHandles.twitter ?? "",
+            linkedin: socialHandles.linkedin ?? "",
+            spotify: socialHandles.spotify ?? "",
+          }}
+          onSaved={() => window.location.reload()}
+        />
+      </div>
     </div>
   );
 }

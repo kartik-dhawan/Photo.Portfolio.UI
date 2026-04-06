@@ -1,46 +1,45 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
-const MAIN_DOMAIN = process.env.NEXT_PUBLIC_MAIN_DOMAIN ?? "localhost";
-const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
+const MAIN_DOMAIN = process.env.NEXT_PUBLIC_MAIN_DOMAIN ?? 'localhost';
+const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? 'kartik';
 
 // Custom domain → username mapping
 // Format: {"laiba.me":"laiba","john.com":"john"}
 const DOMAIN_MAP: Record<string, string> = JSON.parse(
-  process.env.NEXT_PUBLIC_DOMAIN_MAP ?? process.env.DOMAIN_MAP ?? "{}"
+  process.env.NEXT_PUBLIC_DOMAIN_MAP ?? process.env.DOMAIN_MAP ?? '{}'
 );
 
 function rewriteForUser(request: NextRequest, username: string): NextResponse {
   const { pathname } = request.nextUrl;
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = pathname.split('/').filter(Boolean);
   const url = request.nextUrl.clone();
 
   if (segments.length === 0) {
     url.pathname = `/${username}`;
   } else {
-    url.pathname = `/${username}/${segments.join("/")}`;
+    url.pathname = `/${username}/${segments.join('/')}`;
   }
   return NextResponse.rewrite(url);
 }
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hostname = request.headers.get("host") ?? "";
-  const domain = hostname.split(":")[0];
+  const hostname = request.headers.get('host') ?? '';
+  const domain = hostname.split(':')[0];
 
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = pathname.split('/').filter(Boolean);
   const firstSegment = segments[0];
 
-  // Debug logging
-  console.log("Proxy debug:", {
-    hostname,
-    domain,
-    domainMapKeys: Object.keys(DOMAIN_MAP),
-    hasDomainMapping: !!DOMAIN_MAP[domain],
-    mappedUsername: DOMAIN_MAP[domain]
-  });
-
   // Skip static paths
-  const staticPaths = ["api", "_next", "favicon.ico", "home-meta-image.png", "sitemap.xml", "robots.txt", "manifest.webmanifest"];
+  const staticPaths = [
+    'api',
+    '_next',
+    'favicon.ico',
+    'home-meta-image.png',
+    'sitemap.xml',
+    'robots.txt',
+    'manifest.webmanifest',
+  ];
   if (firstSegment && staticPaths.includes(firstSegment)) {
     return NextResponse.next();
   }
@@ -49,17 +48,15 @@ export function proxy(request: NextRequest) {
   const hasDomainMapping = !!DOMAIN_MAP[domain];
   const isMainDomain =
     domain === MAIN_DOMAIN ||
-    domain === "localhost" ||
-    (domain.endsWith(".vercel.app") && !hasDomainMapping);
-
-  console.log("Domain classification:", { domain, isMainDomain, MAIN_DOMAIN });
+    domain === 'localhost' ||
+    (domain.endsWith('.vercel.app') && !hasDomainMapping);
 
   // Custom domain — all paths map to that user
   if (!isMainDomain) {
     const mappedUsername = DOMAIN_MAP[domain];
     if (mappedUsername) {
       const response = rewriteForUser(request, mappedUsername);
-      response.headers.set("x-custom-domain", "true");
+      response.headers.set('x-custom-domain', 'true');
       return response;
     }
     return rewriteForUser(request, DEFAULT_USERNAME);
@@ -74,7 +71,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Sub-routes for default user: /about, /settings, /admin/...
-  const defaultSubRoutes = ["about", "settings", "admin"];
+  const defaultSubRoutes = ['about', 'settings', 'admin'];
   if (defaultSubRoutes.includes(firstSegment)) {
     const url = request.nextUrl.clone();
     url.pathname = `/${DEFAULT_USERNAME}${pathname}`;
@@ -89,5 +86,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)"],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
 };

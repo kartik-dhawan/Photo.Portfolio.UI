@@ -16,6 +16,7 @@ export interface UserProfile {
   heroTitle: string;
   heroSubtitle: string;
   themeId: string;
+  socialHandles?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
