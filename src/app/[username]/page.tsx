@@ -65,6 +65,7 @@ export default async function UserHomePage({ params }: PageProps) {
               initialItems={items}
               total={total}
               pageSize={PAGE_SIZE}
+              userId={user.uid}
             />
           </div>
         )}

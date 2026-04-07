@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
-import { useAppSelector } from "@/store";
 import { CollectionItem, CollectionsResponse } from "@/store/content/types";
 import CollectionCard from "./CollectionCard";
 import Skeleton from "@/components/common/Skeleton";
@@ -11,11 +10,10 @@ interface Props {
   initialItems: CollectionItem[];
   total: number;
   pageSize: number;
+  userId: string;
 }
 
-export default function CollectionsGrid({ initialItems, total, pageSize }: Props) {
-  const { uid } = useAppSelector((s) => s.auth);
-  const userId = uid ?? process.env.NEXT_PUBLIC_DEFAULT_USER_ID ?? "";
+export default function CollectionsGrid({ initialItems, total, pageSize, userId }: Props) {
   const [items, setItems] = useState(initialItems);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -24,20 +22,47 @@ export default function CollectionsGrid({ initialItems, total, pageSize }: Props
 
   const fetchMore = useCallback(async () => {
     if (loading || !hasMore) return;
+
+    // Prevent API calls if userId is not available
+    if (!userId) {
+      console.error('No userId available for fetchMore');
+      setHasMore(false);
+      return;
+    }
+
     setLoading(true);
     const nextPage = page + 1;
     try {
-      const res = await fetch(
-        `${CONTENT_API_ROUTES.collections(userId)}&page=${nextPage}&pageSize=${pageSize}`
-      );
+      const url = `${CONTENT_API_ROUTES.collections(userId)}&page=${nextPage}&pageSize=${pageSize}`;
+      console.log('Fetching from URL:', url);
+      console.log('UserId:', userId);
+
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${res.status}, message: ${errorText}`);
+      }
+
       const data: CollectionsResponse = await res.json();
+
+      if (!data || !Array.isArray(data.items)) {
+        console.error('Invalid response structure:', data);
+        throw new Error('Invalid response structure');
+      }
+
       setItems((prev) => [...prev, ...data.items]);
       setPage(nextPage);
       setHasMore(data.hasMore);
+    } catch (error) {
+      console.error('Failed to fetch more items:', error);
+      // Stop trying to fetch more on error
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, pageSize]);
+  }, [loading, hasMore, page, pageSize, userId]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
