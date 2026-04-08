@@ -192,6 +192,7 @@ export default function ProjectSettingsForm({
       if (values.label !== initialValues.label) routeData.label = values.label;
       if (values.pinned !== initialValues.pinned) routeData.pinned = !!values.pinned;
       if (values.hideFromHome !== initialValues.hideFromHome) routeData.hideFromHome = !!values.hideFromHome;
+      if (values.excludeFromGallery !== initialValues.excludeFromGallery) routeData.excludeFromGallery = !!values.excludeFromGallery;
 
       await Promise.all([
         updateSettings({ brands: finalBrands, tags: finalTags, filmedAt }),
@@ -275,6 +276,16 @@ export default function ProjectSettingsForm({
           />
           <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
             Hide from home page
+          </span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            {...register('excludeFromGallery')}
+            type="checkbox"
+            className="w-4 h-4 accent-white cursor-pointer shrink-0"
+          />
+          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+            Exclude photos from main gallery
           </span>
         </label>
       </div>

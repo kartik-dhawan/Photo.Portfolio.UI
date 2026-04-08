@@ -31,6 +31,7 @@ export interface NavItem {
   order: number;
   pinned?: boolean;
   hideFromHome?: boolean;
+  excludeFromGallery?: boolean;
   userId?: string;
 }
 

@@ -253,6 +253,7 @@ export default function PageContent({
     filmedAt: filmedAt,
     pinned: !!navItem?.pinned,
     hideFromHome: !!navItem?.hideFromHome,
+    excludeFromGallery: !!navItem?.excludeFromGallery,
     tagInput: '',
     brands: brands.map((b) => ({
       id: b.id,

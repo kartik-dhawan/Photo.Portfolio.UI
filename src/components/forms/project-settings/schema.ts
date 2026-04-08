@@ -5,6 +5,7 @@ export const projectSettingsSchema = yup.object({
   filmedAt: yup.string().trim().default(""),
   pinned: yup.boolean().default(false),
   hideFromHome: yup.boolean().default(false),
+  excludeFromGallery: yup.boolean().default(false),
   tagInput: yup.string().trim().default(""),
   brands: yup.array().of(
     yup.object({

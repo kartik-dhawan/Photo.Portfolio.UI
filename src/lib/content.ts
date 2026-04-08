@@ -186,11 +186,11 @@ export async function getAllMedia(
     db.collection("portfolio_routes").where("userId", "==", userId).get(),
   ]);
 
-  const routeMap = new Map<string, { label: string; hidden: boolean }>();
+  const routeMap = new Map<string, { label: string; hidden: boolean; excludeFromGallery: boolean }>();
   for (const doc of routesSnapshot.docs) {
     const data = doc.data();
     const slug = (data.route as string)?.replace(/^\//, "");
-    if (slug) routeMap.set(slug, { label: data.label as string, hidden: !!data.hidden });
+    if (slug) routeMap.set(slug, { label: data.label as string, hidden: !!data.hidden, excludeFromGallery: !!data.excludeFromGallery });
   }
 
   const allItems: CollectionItem[] = [];
@@ -199,7 +199,7 @@ export async function getAllMedia(
     const data = doc.data() as PageContent & { slug: string };
     const slug = data.slug;
     const route = routeMap.get(slug);
-    if (route?.hidden) continue;
+    if (route?.hidden || route?.excludeFromGallery) continue;
     const projectName = route?.label ?? slug;
 
     for (const block of data.blocks ?? []) {
