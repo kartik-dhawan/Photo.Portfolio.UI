@@ -531,7 +531,7 @@ export default function PageContent({
               )}
             </BlockWrapper>
           ) : (
-            <BlockRenderer key={block.id} block={block} brands={brands} />
+            <BlockRenderer key={block.id} block={block} brands={brands} prevBlockType={blocks[index - 1]?.type} />
           )
         )}
       </div>
