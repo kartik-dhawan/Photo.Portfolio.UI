@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getUserByUsername } from "@/lib/users";
 import { getNavItems } from "@/lib/navItems";
 import { getPageContent } from "@/lib/content";
+import { getSettings } from "@/lib/settings";
 import PageContent from "@/components/content/PageContent";
 
 export const revalidate = 60;
@@ -23,9 +24,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const user = await resolveUser(username);
   if (!user) return { title: slug };
 
-  const [content, navItems] = await Promise.all([
+  const [content, navItems, settings] = await Promise.all([
     getPageContent(user.uid, slug),
     getNavItems(user.uid),
+    getSettings(user.uid),
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
@@ -37,6 +39,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       const img = (block.media ?? []).find((m) => m.type === "image");
       if (img) { ogImage = img.url; break; }
     }
+  }
+  if (!ogImage && settings.profilePhotoUrl) {
+    ogImage = settings.profilePhotoUrl;
   }
 
   let description = `${title} — Photography & videography by ${user.displayName}`;

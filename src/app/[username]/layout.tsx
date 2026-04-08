@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { headers } from "next/headers";
 import { getUserByUsername } from "@/lib/users";
+import { getSettings } from "@/lib/settings";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import SocialLinks from "@/components/SocialLinks";
@@ -31,6 +32,11 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
   const { user } = await resolveUser(username);
   if (!user) return { title: "Not Found" };
 
+  const settings = await getSettings(user.uid);
+  const images = settings.profilePhotoUrl
+    ? [{ url: settings.profilePhotoUrl, width: 1200, height: 800, alt: user.displayName }]
+    : undefined;
+
   return {
     title: {
       default: user.displayName,
@@ -44,9 +50,11 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
       type: "website",
       siteName: user.displayName,
       locale: "en_US",
+      images,
     },
     twitter: {
       card: "summary_large_image",
+      images: settings.profilePhotoUrl ? [settings.profilePhotoUrl] : undefined,
     },
   };
 }
