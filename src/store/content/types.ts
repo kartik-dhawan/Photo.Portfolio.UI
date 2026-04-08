@@ -1,5 +1,5 @@
-export type BlockType = 'image' | 'richtext' | 'spacer' | 'youtube';
-export type ImageLayout = 'full' | 'half';
+export type BlockType = 'image' | 'richtext' | 'spacer' | 'youtube' | 'instagram';
+export type ImageLayout = 'full' | 'half' | 'third';
 export type AspectRatio = '16/9' | '1/1' | '4/5' | '9/16';
 
 export interface MediaItem {

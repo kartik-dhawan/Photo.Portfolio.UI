@@ -25,6 +25,7 @@ import BlockRenderer from './BlockRenderer';
 import RichTextEditor from './RichTextEditor';
 import ImageBlockEditor from './ImageBlockEditor';
 import YouTubeBlockEditor from './YouTubeBlockEditor';
+import InstagramBlockEditor from './InstagramBlockEditor';
 import BlockWrapper from './BlockWrapper';
 import AddBlockButton from './AddBlockButton';
 import ProjectSettingsForm from '@/components/forms/project-settings/ProjectSettingsForm';
@@ -182,6 +183,8 @@ export default function PageContent({
       type === 'image'
         ? { layout: 'full', media: [] }
         : type === 'youtube'
+        ? { layout: 'full', media: [] }
+        : type === 'instagram'
         ? { layout: 'full', media: [] }
         : { markdown: '' };
     const block: ContentBlock = {
@@ -505,6 +508,12 @@ export default function PageContent({
                 />
               ) : block.type === 'youtube' ? (
                 <YouTubeBlockEditor
+                  block={block}
+                  brands={brands}
+                  onChange={(data) => handleUpdateBlock(block.id, data)}
+                />
+              ) : block.type === 'instagram' ? (
+                <InstagramBlockEditor
                   block={block}
                   brands={brands}
                   onChange={(data) => handleUpdateBlock(block.id, data)}

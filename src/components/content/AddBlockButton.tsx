@@ -58,6 +58,12 @@ export default function AddBlockButton({ onAdd }: Props) {
             YouTube Embed
           </button>
           <button
+            onClick={() => handleSelect("instagram")}
+            className="block w-full text-left px-4 py-2 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+          >
+            Instagram Embed
+          </button>
+          <button
             onClick={() => handleSelect("spacer")}
             className="block w-full text-left px-4 py-2 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
           >
