@@ -6,6 +6,8 @@ export const projectSettingsSchema = yup.object({
   pinned: yup.boolean().default(false),
   hideFromHome: yup.boolean().default(false),
   excludeFromGallery: yup.boolean().default(false),
+  youtubeTitle: yup.string().trim().default(""),
+  instagramTitle: yup.string().trim().default(""),
   tagInput: yup.string().trim().default(""),
   brands: yup.array().of(
     yup.object({

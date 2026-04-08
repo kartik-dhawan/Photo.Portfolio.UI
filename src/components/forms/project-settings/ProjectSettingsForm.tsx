@@ -187,6 +187,10 @@ export default function ProjectSettingsForm({
 
       const finalTags = (values.tags ?? []).map((t) => t.value!);
       const filmedAt = values.filmedAt ?? '';
+      const sectionNames = {
+        youtube: values.youtubeTitle || undefined,
+        instagram: values.instagramTitle || undefined,
+      };
 
       const routeData: Record<string, unknown> = {};
       if (values.label !== initialValues.label) routeData.label = values.label;
@@ -195,7 +199,7 @@ export default function ProjectSettingsForm({
       if (values.excludeFromGallery !== initialValues.excludeFromGallery) routeData.excludeFromGallery = !!values.excludeFromGallery;
 
       await Promise.all([
-        updateSettings({ brands: finalBrands, tags: finalTags, filmedAt }),
+        updateSettings({ brands: finalBrands, tags: finalTags, filmedAt, sectionNames }),
         Object.keys(routeData).length > 0 ? updateRoute(routeData) : Promise.resolve(),
       ]);
 
@@ -300,6 +304,32 @@ export default function ProjectSettingsForm({
           type="date"
           className={`${inputClass} [color-scheme:dark]`}
         />
+      </div>
+
+      {/* Section titles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-zinc-800 pt-4">
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+            YouTube Section Title
+          </span>
+          <input
+            {...register('youtubeTitle')}
+            type="text"
+            className={inputClass}
+            placeholder="YouTube References"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+            Instagram Section Title
+          </span>
+          <input
+            {...register('instagramTitle')}
+            type="text"
+            className={inputClass}
+            placeholder="Instagram References"
+          />
+        </div>
       </div>
 
       {/* Tags */}

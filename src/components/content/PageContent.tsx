@@ -102,6 +102,7 @@ export default function PageContent({
   const brands = effectivePage?.brands ?? [];
   const tags = effectivePage?.tags ?? [];
   const filmedAt = effectivePage?.filmedAt ?? '';
+  const sectionNames = effectivePage?.sectionNames;
 
   const handleEdit = () => {
     dispatch(setDraft({ slug, blocks: page?.blocks ?? [] }));
@@ -232,6 +233,10 @@ export default function PageContent({
         brands: savedBrands,
         tags: savedTags,
         filmedAt: values.filmedAt ?? '',
+        sectionNames: {
+          youtube: values.youtubeTitle || undefined,
+          instagram: values.instagramTitle || undefined,
+        },
       })
     );
 
@@ -254,6 +259,8 @@ export default function PageContent({
     pinned: !!navItem?.pinned,
     hideFromHome: !!navItem?.hideFromHome,
     excludeFromGallery: !!navItem?.excludeFromGallery,
+    youtubeTitle: sectionNames?.youtube ?? '',
+    instagramTitle: sectionNames?.instagram ?? '',
     tagInput: '',
     brands: brands.map((b) => ({
       id: b.id,
@@ -531,7 +538,7 @@ export default function PageContent({
               )}
             </BlockWrapper>
           ) : (
-            <BlockRenderer key={block.id} block={block} brands={brands} prevBlockType={blocks[index - 1]?.type} />
+            <BlockRenderer key={block.id} block={block} brands={brands} prevBlockType={blocks[index - 1]?.type} sectionNames={sectionNames} />
           )
         )}
       </div>

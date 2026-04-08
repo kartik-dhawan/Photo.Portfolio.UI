@@ -30,12 +30,18 @@ export interface ContentBlock {
   order: number;
 }
 
+export interface SectionNames {
+  youtube?: string;
+  instagram?: string;
+}
+
 export interface PageContent {
   slug: string;
   blocks: ContentBlock[];
   brands?: Brand[];
   tags?: string[];
   filmedAt?: string;
+  sectionNames?: SectionNames;
   updatedAt: string;
   createdAt: string;
 }

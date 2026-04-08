@@ -24,4 +24,5 @@ export type {
   AspectRatio,
   CollectionItem,
   CollectionsResponse,
+  SectionNames,
 } from "./types";

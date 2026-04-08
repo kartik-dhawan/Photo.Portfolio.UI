@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
 import { getAuthToken } from "@/store/auth/slice";
-import { Brand, ContentBlock, PageContent } from "./types";
+import { Brand, ContentBlock, PageContent, SectionNames } from "./types";
 import { initialState } from "./initialState";
 
 export const fetchPageContent = createAsyncThunk(
@@ -103,13 +103,15 @@ const contentSlice = createSlice({
         brands: Brand[];
         tags: string[];
         filmedAt: string;
+        sectionNames?: SectionNames;
       }>
     ) {
-      const { slug, brands, tags, filmedAt } = action.payload;
+      const { slug, brands, tags, filmedAt, sectionNames } = action.payload;
       if (state.pages[slug]) {
         state.pages[slug].brands = brands;
         state.pages[slug].tags = tags;
         state.pages[slug].filmedAt = filmedAt;
+        state.pages[slug].sectionNames = sectionNames;
       }
     },
     addBlock(

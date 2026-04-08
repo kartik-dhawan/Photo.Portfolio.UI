@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { CONTENT_API_ROUTES } from "@/routeConfig/apiRoutes";
-import { Brand } from "@/store/content";
+import { Brand, SectionNames } from "@/store/content";
 import { getAuthToken } from "@/store/auth";
 
 interface PageSettings {
   brands: Brand[];
   tags: string[];
   filmedAt: string;
+  sectionNames?: SectionNames;
 }
 
 export function useUpdatePageSettings(slug: string) {

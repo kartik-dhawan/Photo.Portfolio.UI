@@ -1,5 +1,5 @@
 import { getAdminDb } from "@/firebase/admin";
-import { Brand, ContentBlock, PageContent, CollectionItem, CollectionsResponse } from "@/store/content/types";
+import { Brand, ContentBlock, PageContent, CollectionItem, CollectionsResponse, SectionNames } from "@/store/content/types";
 
 const COLLECTION = "portfolio_content";
 
@@ -51,13 +51,13 @@ export async function savePageContent(
 export async function updatePageSettings(
   userId: string,
   slug: string,
-  settings: { brands: Brand[]; tags: string[]; filmedAt: string }
+  settings: { brands: Brand[]; tags: string[]; filmedAt: string; sectionNames?: SectionNames }
 ): Promise<void> {
   const db = getAdminDb();
   const ref = db.collection(COLLECTION).doc(contentDocId(userId, slug));
   const existing = await ref.get();
   if (existing.exists) {
-    await ref.update({ brands: settings.brands, tags: settings.tags, filmedAt: settings.filmedAt });
+    await ref.update({ brands: settings.brands, tags: settings.tags, filmedAt: settings.filmedAt, sectionNames: settings.sectionNames ?? {} });
   } else {
     await ref.set({
       slug,
@@ -66,6 +66,7 @@ export async function updatePageSettings(
       brands: settings.brands,
       tags: settings.tags,
       filmedAt: settings.filmedAt,
+      sectionNames: settings.sectionNames ?? {},
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     });

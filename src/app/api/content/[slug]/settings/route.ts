@@ -12,10 +12,10 @@ export async function PATCH(
     }
 
     const { slug } = await params;
-    const { brands, tags, filmedAt, userId } = await request.json();
+    const { brands, tags, filmedAt, sectionNames, userId } = await request.json();
     const targetUserId = userId ?? authUser.uid;
 
-    await updatePageSettings(targetUserId, slug, { brands, tags, filmedAt: filmedAt ?? "" });
+    await updatePageSettings(targetUserId, slug, { brands, tags, filmedAt: filmedAt ?? "", sectionNames });
     return Response.json({ success: true });
   } catch (err: unknown) {
     const message =

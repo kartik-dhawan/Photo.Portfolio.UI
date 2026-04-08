@@ -1,4 +1,4 @@
-import { ContentBlock, BlockType, Brand } from "@/store/content";
+import { ContentBlock, BlockType, Brand, SectionNames } from "@/store/content";
 import ImageBlockView from "./ImageBlockView";
 import RichTextView from "./RichTextView";
 import YouTubeBlockView from "./YouTubeBlockView";
@@ -8,9 +8,10 @@ interface Props {
   block: ContentBlock;
   brands?: Brand[];
   prevBlockType?: BlockType;
+  sectionNames?: SectionNames;
 }
 
-export default function BlockRenderer({ block, brands, prevBlockType }: Props) {
+export default function BlockRenderer({ block, brands, prevBlockType, sectionNames }: Props) {
   const showTitle = prevBlockType !== block.type;
 
   switch (block.type) {
@@ -23,7 +24,7 @@ export default function BlockRenderer({ block, brands, prevBlockType }: Props) {
         <div className="flex flex-col gap-3">
           {showTitle && (
             <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-mono">
-              YouTube References
+              {sectionNames?.youtube || "YouTube References"}
             </span>
           )}
           <YouTubeBlockView block={block} brands={brands} />
@@ -34,7 +35,7 @@ export default function BlockRenderer({ block, brands, prevBlockType }: Props) {
         <div className="flex flex-col gap-3">
           {showTitle && (
             <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-mono">
-              Instagram References
+              {sectionNames?.instagram || "Instagram References"}
             </span>
           )}
           <InstagramBlockView block={block} brands={brands} />
