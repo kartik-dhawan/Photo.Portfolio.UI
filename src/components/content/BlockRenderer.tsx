@@ -16,9 +16,23 @@ export default function BlockRenderer({ block, brands }: Props) {
     case "richtext":
       return <RichTextView markdown={block.markdown ?? ""} />;
     case "youtube":
-      return <YouTubeBlockView block={block} brands={brands} />;
+      return (
+        <div className="flex flex-col gap-3">
+          <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-mono">
+            YouTube References
+          </span>
+          <YouTubeBlockView block={block} brands={brands} />
+        </div>
+      );
     case "instagram":
-      return <InstagramBlockView block={block} brands={brands} />;
+      return (
+        <div className="flex flex-col gap-3">
+          <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-mono">
+            Instagram References
+          </span>
+          <InstagramBlockView block={block} brands={brands} />
+        </div>
+      );
     case "spacer":
       return <div style={{ height: 32 }} />;
     default:

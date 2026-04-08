@@ -6,15 +6,11 @@ import { useModal } from "@/components/common/useModal";
 import MediaMetaForm from "@/components/forms/media-meta/MediaMetaForm";
 import MediaCaption from "./MediaCaption";
 
-function extractPostId(url: string): string | null {
+function extractPostUrl(url: string): string | null {
   const match = url.match(
-    /instagram\.com\/(?:p|reel|reels)\/([A-Za-z0-9_-]+)/
+    /(https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|reels)\/[A-Za-z0-9_-]+)/
   );
   return match?.[1] ?? null;
-}
-
-function getThumbnailUrl(postId: string): string {
-  return `https://instagram.com/p/${postId}/media/?size=l`;
 }
 
 interface Props {
@@ -102,7 +98,7 @@ export default function InstagramBlockEditor({ block, brands, onChange }: Props)
         style={{ gridTemplateColumns: colStyle }}
       >
         {media.map((item, i) => {
-          const postId = extractPostId(item.url);
+          const postUrl = extractPostUrl(item.url);
           return (
             <div key={i} className="flex flex-col gap-2">
               <div className="flex gap-2">
@@ -126,13 +122,19 @@ export default function InstagramBlockEditor({ block, brands, onChange }: Props)
                   &times;
                 </button>
               </div>
-              {postId ? (
-                <div className="aspect-square w-full overflow-hidden rounded">
-                  <img
-                    src={getThumbnailUrl(postId)}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+              {postUrl ? (
+                <div className="flex items-center gap-2 border border-zinc-800 rounded px-3 py-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-zinc-400 shrink-0">
+                    <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6" />
+                  </svg>
+                  <a
+                    href={postUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-400 hover:text-white text-xs font-mono transition-colors underline underline-offset-2 truncate"
+                  >
+                    {postUrl}
+                  </a>
                 </div>
               ) : (
                 item.url && (
