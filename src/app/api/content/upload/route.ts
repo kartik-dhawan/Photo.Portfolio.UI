@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/supabase/admin";
 import { verifyAuth } from "@/lib/auth";
+import { isCloudinaryActive, isSupabaseActive } from "@/lib/storage-config";
 
 const BUCKET = "photo-portfolio";
 
@@ -25,31 +26,45 @@ export async function POST(request: Request) {
     const ext = fileName.split(".").pop() || "bin";
     const path = `${targetUserId}/${slug}/${Date.now()}.${ext}`;
 
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUploadUrl(path);
-
-    if (error || !data) {
-      return Response.json(
-        { error: error?.message || "Failed to create upload URL" },
-        { status: 500 }
-      );
+    // For Cloudinary, we don't need signed URLs - upload happens directly
+    if (isCloudinaryActive()) {
+      const mediaType = contentType?.startsWith("video/") ? "video" : "image";
+      return Response.json({
+        path,
+        type: mediaType,
+      });
     }
 
-    const { data: publicUrlData } = supabase.storage
-      .from(BUCKET)
-      .getPublicUrl(path);
+    // For Supabase, maintain existing signed URL flow
+    if (isSupabaseActive()) {
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUploadUrl(path);
 
-    const mediaType = contentType?.startsWith("video/") ? "video" : "image";
+      if (error || !data) {
+        return Response.json(
+          { error: error?.message || "Failed to create upload URL" },
+          { status: 500 }
+        );
+      }
 
-    return Response.json({
-      signedUrl: data.signedUrl,
-      token: data.token,
-      path,
-      publicUrl: publicUrlData.publicUrl,
-      type: mediaType,
-    });
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKET)
+        .getPublicUrl(path);
+
+      const mediaType = contentType?.startsWith("video/") ? "video" : "image";
+
+      return Response.json({
+        signedUrl: data.signedUrl,
+        token: data.token,
+        path,
+        publicUrl: publicUrlData.publicUrl,
+        type: mediaType,
+      });
+    }
+
+    return Response.json({ error: "No storage provider configured" }, { status: 500 });
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : "Failed to create upload URL";

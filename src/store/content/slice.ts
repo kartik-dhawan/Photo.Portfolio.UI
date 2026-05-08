@@ -42,12 +42,12 @@ export const savePageContent = createAsyncThunk(
 export const uploadMedia = createAsyncThunk(
   "content/upload",
   async (
-    { slug, file }: { slug: string; file: File },
+    { slug, file, userId }: { slug: string; file: File; userId: string },
     { rejectWithValue }
   ) => {
     try {
       const { uploadToStorage } = await import("@/lib/upload");
-      const { publicUrl, type } = await uploadToStorage(slug, file);
+      const { publicUrl, type } = await uploadToStorage(slug, file, userId);
       return { url: publicUrl, type };
     } catch (err) {
       return rejectWithValue(

@@ -22,7 +22,7 @@ export default function ProfilePhoto({ initialUrl }: Props) {
     if (!file) return;
     setUploading(true);
     try {
-      const { publicUrl } = await uploadToStorage("profile", file);
+      const { publicUrl } = await uploadToStorage("profile", file, uid!);
       const token = getAuthToken();
       await fetch("/api/settings", {
         method: "PATCH",
@@ -41,9 +41,8 @@ export default function ProfilePhoto({ initialUrl }: Props) {
 
   return (
     <div
-      className={`relative w-full aspect-video overflow-hidden rounded border border-zinc-800 bg-zinc-900 ${
-        isAdmin ? "cursor-pointer hover:border-zinc-600 transition-colors" : ""
-      } ${uploading ? "opacity-50 animate-pulse" : ""}`}
+      className={`relative w-full aspect-video overflow-hidden rounded border border-zinc-800 bg-zinc-900 ${isAdmin ? "cursor-pointer hover:border-zinc-600 transition-colors" : ""
+        } ${uploading ? "opacity-50 animate-pulse" : ""}`}
       onClick={() => isAdmin && fileRef.current?.click()}
     >
       {photoUrl ? (

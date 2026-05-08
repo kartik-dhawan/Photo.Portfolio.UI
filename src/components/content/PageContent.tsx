@@ -75,7 +75,7 @@ export default function PageContent({
     hasChanges: boolean;
     saving: boolean;
     save: () => Promise<void>;
-  }>({ hasChanges: false, saving: false, save: async () => {} });
+  }>({ hasChanges: false, saving: false, save: async () => { } });
 
   // Map blob URLs to their File objects for deferred upload
   const pendingFiles = useRef<Map<string, File>>(new Map());
@@ -133,7 +133,7 @@ export default function PageContent({
     const uploads = Array.from(pendingFiles.current.entries())
       .filter(([blobUrl]) => !removedBlobs.current.has(blobUrl))
       .map(async ([blobUrl, file]) => {
-        const result = await dispatch(uploadMedia({ slug, file })).unwrap();
+        const result = await dispatch(uploadMedia({ slug, file, userId: tenantUserId })).unwrap();
         blobToRemote.set(blobUrl, result.url);
         URL.revokeObjectURL(blobUrl);
       });
@@ -184,10 +184,10 @@ export default function PageContent({
       type === 'image'
         ? { layout: 'full', media: [] }
         : type === 'youtube'
-        ? { layout: 'full', media: [] }
-        : type === 'instagram'
-        ? { layout: 'full', media: [] }
-        : { markdown: '' };
+          ? { layout: 'full', media: [] }
+          : type === 'instagram'
+            ? { layout: 'full', media: [] }
+            : { markdown: '' };
     const block: ContentBlock = {
       id: crypto.randomUUID(),
       type,
