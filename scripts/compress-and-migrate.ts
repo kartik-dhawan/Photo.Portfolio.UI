@@ -120,7 +120,7 @@ async function compressAndMigrate() {
                 if (finalSize <= 10 * 1024 * 1024) {
                   // Upload the more compressed version
                   const fileName = supabasePath.split('/').pop() || 'file';
-                  const file = new File([moreCompressedBuffer.buffer], fileName, { type: 'image/jpeg' });
+                  const file = new File([Buffer.from(moreCompressedBuffer)], fileName, { type: 'image/jpeg' });
 
                   const result = await uploadToCloudinary(supabasePath, file);
 
@@ -141,7 +141,7 @@ async function compressAndMigrate() {
               } else {
                 // Upload the compressed version
                 const fileName = supabasePath.split('/').pop() || 'file';
-                const file = new File([compressedBuffer.buffer], fileName, { type: 'image/jpeg' });
+                const file = new File([Buffer.from(compressedBuffer)], fileName, { type: 'image/jpeg' });
 
                 const result = await uploadToCloudinary(supabasePath, file);
 

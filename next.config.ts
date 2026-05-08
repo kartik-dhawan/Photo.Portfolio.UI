@@ -26,6 +26,11 @@ const nextConfig: NextConfig = {
         hostname: "xmpzqnoeufwfftmwbhkm.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
     ],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
