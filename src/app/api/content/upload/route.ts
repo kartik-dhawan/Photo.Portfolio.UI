@@ -1,8 +1,5 @@
-import { getSupabaseAdmin } from "@/supabase/admin";
 import { verifyAuth } from "@/lib/auth";
-import { isCloudinaryActive, isSupabaseActive } from "@/lib/storage-config";
-
-const BUCKET = "photo-portfolio";
+import { storageManager } from "@/lib/storage-manager";
 
 export async function POST(request: Request) {
   try {
@@ -11,11 +8,14 @@ export async function POST(request: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { slug, fileName, contentType, userId } = await request.json();
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const slug = formData.get('slug') as string;
+    const userId = formData.get('userId') as string;
 
-    if (!slug || !fileName) {
+    if (!file || !slug) {
       return Response.json(
-        { error: "slug and fileName are required" },
+        { error: "file and slug are required" },
         { status: 400 }
       );
     }
@@ -23,51 +23,16 @@ export async function POST(request: Request) {
     // Use provided userId (for superAdmin acting on behalf) or auth user's uid
     const targetUserId = userId ?? authUser.uid;
 
-    const ext = fileName.split(".").pop() || "bin";
+    const ext = file.name.split(".").pop() || "bin";
     const path = `${targetUserId}/${slug}/${Date.now()}.${ext}`;
 
-    // For Cloudinary, we don't need signed URLs - upload happens directly
-    if (isCloudinaryActive()) {
-      const mediaType = contentType?.startsWith("video/") ? "video" : "image";
-      return Response.json({
-        path,
-        type: mediaType,
-      });
-    }
+    // Use storage manager for unified upload (Cloudinary or Supabase)
+    const result = await storageManager.upload(path, file);
 
-    // For Supabase, maintain existing signed URL flow
-    if (isSupabaseActive()) {
-      const supabase = getSupabaseAdmin();
-      const { data, error } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUploadUrl(path);
-
-      if (error || !data) {
-        return Response.json(
-          { error: error?.message || "Failed to create upload URL" },
-          { status: 500 }
-        );
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from(BUCKET)
-        .getPublicUrl(path);
-
-      const mediaType = contentType?.startsWith("video/") ? "video" : "image";
-
-      return Response.json({
-        signedUrl: data.signedUrl,
-        token: data.token,
-        path,
-        publicUrl: publicUrlData.publicUrl,
-        type: mediaType,
-      });
-    }
-
-    return Response.json({ error: "No storage provider configured" }, { status: 500 });
+    return Response.json(result);
   } catch (err: unknown) {
     const message =
-      err instanceof Error ? err.message : "Failed to create upload URL";
+      err instanceof Error ? err.message : "Failed to upload file";
     return Response.json({ error: message }, { status: 500 });
   }
 }

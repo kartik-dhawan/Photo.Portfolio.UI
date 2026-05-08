@@ -5,9 +5,6 @@ import { isCloudinaryActive, isSupabaseActive } from './storage-config';
 
 class StorageManager {
   private getProvider(): StorageProvider {
-    const provider = isCloudinaryActive() ? 'cloudinary' : isSupabaseActive() ? 'supabase' : 'none';
-    console.log(`🗂️ Using storage provider: ${provider}`);
-
     if (isCloudinaryActive()) {
       return cloudinaryStorage;
     } else if (isSupabaseActive()) {
@@ -37,22 +34,6 @@ class StorageManager {
   getPublicUrl(path: string): string {
     const provider = this.getProvider();
     return provider.getPublicUrl(path);
-  }
-
-  // Method to sync data between providers (for migration)
-  async syncToBackup(path: string, file: File): Promise<void> {
-    try {
-      if (isCloudinaryActive()) {
-        // Sync to Supabase as backup
-        await supabaseStorage.upload(path, file);
-      } else if (isSupabaseActive()) {
-        // Sync to Cloudinary as backup
-        await cloudinaryStorage.upload(path, file);
-      }
-    } catch (error) {
-      console.warn('Failed to sync to backup provider:', error);
-      // Don't throw error - sync failure shouldn't break main operation
-    }
   }
 }
 
