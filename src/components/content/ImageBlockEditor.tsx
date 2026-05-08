@@ -39,7 +39,35 @@ export default function ImageBlockEditor({
 
   const [metaModal, renderMetaModal] = useModal({ title: "Add Meta Data" });
 
+  // Cloudinary limits for client-side validation
+  const CLOUDINARY_LIMITS = {
+    image: { size: 10 * 1024 * 1024, sizeMB: 10 }, // 10 MB
+    video: { size: 100 * 1024 * 1024, sizeMB: 100 }, // 100 MB
+  } as const;
+
+  const validateFileSize = (file: File): { isValid: boolean; error?: string } => {
+    const fileType: "image" | "video" = file.type.startsWith("video/") ? "video" : "image";
+    const fileSize = file.size;
+    const limit = CLOUDINARY_LIMITS[fileType];
+
+    if (fileSize > limit.size) {
+      const fileSizeMB = fileSize / (1024 * 1024);
+      return {
+        isValid: false,
+        error: `${file.name} (${fileSizeMB.toFixed(2)} MB) exceeds ${fileType} limit (${limit.sizeMB} MB)`
+      };
+    }
+
+    return { isValid: true };
+  };
+
   const addFile = (file: File): MediaItem => {
+    const validation = validateFileSize(file);
+    if (!validation.isValid) {
+      alert(validation.error!);
+      throw new Error(validation.error!);
+    }
+
     const blobUrl = URL.createObjectURL(file);
     const mediaType = file.type.startsWith("video/") ? "video" : "image";
     onFileAdd(blobUrl, file);
@@ -49,6 +77,14 @@ export default function ImageBlockEditor({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const validation = validateFileSize(file);
+    if (!validation.isValid) {
+      alert(validation.error!);
+      e.target.value = "";
+      return;
+    }
+
     const item = addFile(file);
     onChange({ media: [...media, item].slice(0, maxMedia) });
     e.target.value = "";
@@ -67,6 +103,13 @@ export default function ImageBlockEditor({
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
+
+      const validation = validateFileSize(file);
+      if (!validation.isValid) {
+        alert(validation.error!);
+        return;
+      }
+
       const oldUrl = media[index]?.url;
       if (oldUrl) onFileRemove(oldUrl);
       const item = addFile(file);
@@ -120,11 +163,10 @@ export default function ImageBlockEditor({
               <button
                 key={r.value}
                 onClick={() => onChange({ aspectRatio: r.value })}
-                className={`text-[10px] uppercase tracking-wider transition-colors cursor-pointer border rounded px-2 py-1 ${
-                  aspectRatio === r.value
-                    ? "text-white border-zinc-600"
-                    : "text-zinc-600 border-zinc-800 hover:text-zinc-400"
-                }`}
+                className={`text-[10px] uppercase tracking-wider transition-colors cursor-pointer border rounded px-2 py-1 ${aspectRatio === r.value
+                  ? "text-white border-zinc-600"
+                  : "text-zinc-600 border-zinc-800 hover:text-zinc-400"
+                  }`}
               >
                 {r.label}
               </button>

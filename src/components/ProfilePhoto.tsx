@@ -20,6 +20,16 @@ export default function ProfilePhoto({ initialUrl }: Props) {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file size (profile photos are images)
+    const maxSize = 10 * 1024 * 1024; // 10 MB for images
+    if (file.size > maxSize) {
+      const fileSizeMB = file.size / (1024 * 1024);
+      alert(`Profile photo size (${fileSizeMB.toFixed(2)} MB) exceeds 10 MB limit. Please use a smaller image.`);
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     try {
       const { publicUrl } = await uploadToStorage("profile", file, uid!);
