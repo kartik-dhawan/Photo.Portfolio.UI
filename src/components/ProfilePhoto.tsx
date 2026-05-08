@@ -22,10 +22,21 @@ export default function ProfilePhoto({ initialUrl }: Props) {
     if (!file) return;
 
     // Validate file size (profile photos are images)
-    const maxSize = 10 * 1024 * 1024; // 10 MB for images
-    if (file.size > maxSize) {
+    const cloudinaryLimit = 10 * 1024 * 1024; // 10 MB for images
+    const serverlessLimit = 50 * 1024 * 1024; // 50 MB serverless limit
+    const maxSize = Math.min(cloudinaryLimit, serverlessLimit);
+
+    if (file.size > serverlessLimit) {
       const fileSizeMB = file.size / (1024 * 1024);
-      alert(`Profile photo size (${fileSizeMB.toFixed(2)} MB) exceeds 10 MB limit. Please use a smaller image.`);
+      const serverlessLimitMB = serverlessLimit / (1024 * 1024);
+      alert(`Profile photo size (${fileSizeMB.toFixed(2)} MB) exceeds serverless limit (${serverlessLimitMB} MB). Please use a smaller image.`);
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > cloudinaryLimit) {
+      const fileSizeMB = file.size / (1024 * 1024);
+      alert(`Profile photo size (${fileSizeMB.toFixed(2)} MB) exceeds Cloudinary limit (10 MB). Please use a smaller image.`);
       e.target.value = "";
       return;
     }

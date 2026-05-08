@@ -7,6 +7,12 @@ const CLOUDINARY_LIMITS = {
   video: { size: 100 * 1024 * 1024, sizeMB: 100 }, // 100 MB
 } as const;
 
+// Serverless function limits (more conservative)
+const SERVERLESS_LIMITS = {
+  image: 50 * 1024 * 1024, // 50 MB for images
+  video: 50 * 1024 * 1024, // 50 MB for videos
+} as const;
+
 export async function POST(request: Request) {
   try {
     const authUser = await verifyAuth(request);
@@ -29,17 +35,37 @@ export async function POST(request: Request) {
     // Pre-validate file size for better UX
     const fileType: "image" | "video" = file.type.startsWith("video/") ? "video" : "image";
     const fileSize = file.size;
-    const limit = CLOUDINARY_LIMITS[fileType];
+    const cloudinaryLimit = CLOUDINARY_LIMITS[fileType];
+    const serverlessLimit = SERVERLESS_LIMITS[fileType];
 
-    if (fileSize > limit.size) {
+    // Check serverless limits first (more restrictive)
+    if (fileSize > serverlessLimit) {
       const fileSizeMB = fileSize / (1024 * 1024);
+      const serverlessLimitMB = serverlessLimit / (1024 * 1024);
       return Response.json({
-        error: `File size (${fileSizeMB.toFixed(2)} MB) exceeds Cloudinary ${fileType} limit (${limit.sizeMB} MB).`,
+        error: `File size (${fileSizeMB.toFixed(2)} MB) exceeds serverless limit (${serverlessLimitMB} MB).`,
         details: {
           fileName: file.name,
           fileType,
           fileSizeMB: fileSizeMB.toFixed(2),
-          limitMB: limit.sizeMB,
+          serverlessLimitMB: serverlessLimitMB,
+          cloudinaryLimitMB: cloudinaryLimit.sizeMB,
+          suggestion: `Try compressing the ${fileType} or use a file under ${serverlessLimitMB} MB`,
+          alternative: "Consider using video compression software before uploading"
+        }
+      }, { status: 413 }); // 413 Payload Too Large
+    }
+
+    // Then check Cloudinary limits
+    if (fileSize > cloudinaryLimit.size) {
+      const fileSizeMB = fileSize / (1024 * 1024);
+      return Response.json({
+        error: `File size (${fileSizeMB.toFixed(2)} MB) exceeds Cloudinary ${fileType} limit (${cloudinaryLimit.sizeMB} MB).`,
+        details: {
+          fileName: file.name,
+          fileType,
+          fileSizeMB: fileSizeMB.toFixed(2),
+          cloudinaryLimitMB: cloudinaryLimit.sizeMB,
           suggestion: fileType === 'image'
             ? 'Try compressing the image or use a smaller format'
             : 'Try compressing the video or upgrade your Cloudinary plan'
