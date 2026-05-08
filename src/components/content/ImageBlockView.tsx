@@ -48,13 +48,13 @@ export default function ImageBlockView({ block, brands }: Props) {
                   src={item.url}
                   alt={item.title ?? ""}
                   fill
-                  sizes={isHalf ? "(max-width: 768px) 100vw, 50vw" : "100vw"}
+                  sizes={isHalf ? "(max-width: 768px) 50vw, 100vw" : "(max-width: 768px) 100vw, 80vw"}
                   className="object-cover"
                   loading={i === 0 ? "eager" : "lazy"}
                   priority={i === 0}
                   quality={80}
                   placeholder="blur"
-                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTgxODE4Ii8+PC9zdmc+"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3CudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTgxODE4Ii8+PC9zdmc+"
                 />
               )}
             </div>
