@@ -1,7 +1,5 @@
-import { getSupabaseAdmin } from "@/supabase/admin";
 import { verifyAuth } from "@/lib/auth";
 import { storageManager } from "@/lib/storage-manager";
-import { isCloudinaryActive, isSupabaseActive } from "@/lib/storage-config";
 
 const BUCKET = "photo-portfolio";
 
@@ -19,12 +17,8 @@ export async function POST(request: Request) {
 
     // Use storage manager for unified deletion
     try {
-      // Extract paths from URLs for both Cloudinary and Supabase
+      // Extract paths from Cloudinary URLs
       const paths = urls.map((url) => {
-        // For Supabase URLs
-        const supabaseMatch = url.match(/\/object\/public\/[^/]+\/(.+)$/);
-        if (supabaseMatch) return supabaseMatch[1];
-
         // For Cloudinary URLs - extract the path part
         const cloudinaryMatch = url.match(/\/image\/upload\/(.+)$/);
         if (cloudinaryMatch) return cloudinaryMatch[1];

@@ -8,7 +8,7 @@ export async function uploadToStorage(
 ): Promise<{ publicUrl: string; path: string; type: "image" | "video" }> {
   const authToken = getAuthToken();
 
-  // Use FormData for unified upload (works for both Cloudinary and Supabase)
+  // Use FormData for unified upload (Cloudinary)
   const formData = new FormData();
   formData.append('file', file);
   formData.append('slug', slug);

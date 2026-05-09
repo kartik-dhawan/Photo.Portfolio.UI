@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     const ext = file.name.split(".").pop() || "bin";
     const path = `${targetUserId}/${slug}/${Date.now()}.${ext}`;
 
-    // Use storage manager for unified upload (Cloudinary or Supabase)
+    // Use storage manager for unified upload (Cloudinary)
     const result = await storageManager.upload(path, file);
 
     return Response.json({

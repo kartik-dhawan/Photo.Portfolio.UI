@@ -1,9 +1,8 @@
 import { getAdminDb } from "@/firebase/admin";
 import { deleteNavItem } from "@/lib/navItems";
-import { getSupabaseAdmin } from "@/supabase/admin";
 import { verifyAuth } from "@/lib/auth";
 import { storageManager } from "@/lib/storage-manager";
-import { isCloudinaryActive, isSupabaseActive } from "@/lib/storage-config";
+import { v2 as cloudinary } from 'cloudinary';
 
 const CONTENT_COLLECTION = "portfolio_content";
 const ROUTES_COLLECTION = "portfolio_routes";
@@ -33,29 +32,15 @@ export async function DELETE(
       const contentDocId = `${userId}_${slug}`;
       const storagePath = `${userId}/${slug}`;
 
-      // Delete media using storage manager (works for both providers)
+      // Delete media from Cloudinary folder
       try {
-        if (isSupabaseActive()) {
-          // For Supabase, list files first
-          const supabase = getSupabaseAdmin();
-          const { data: files } = await supabase.storage
-            .from(BUCKET)
-            .list(storagePath);
+        // Use Cloudinary's delete by prefix API to delete all files in folder
+        const prefix = `${BUCKET}/${storagePath}`;
+        const result = await cloudinary.api.delete_resources_by_prefix(prefix);
 
-          if (files?.length) {
-            const paths = files.map((f) => `${storagePath}/${f.name}`);
-            await storageManager.delete(paths);
-          }
-        } else if (isCloudinaryActive()) {
-          // For Cloudinary, we need to find all files in the folder
-          // This is a simplified approach - in production you might want to
-          // track media paths in your database for more efficient deletion
-          console.log(`Would delete all files in ${storagePath} from Cloudinary`);
-          // Note: Cloudinary doesn't have a simple "list folder" API like Supabase
-          // You might need to maintain a list of files in your database
-        }
+        console.log(`Deleted files from Cloudinary folder ${prefix}:`, result);
       } catch (error) {
-        console.error('Storage deletion error:', error);
+        console.error('Cloudinary folder deletion error:', error);
         // Continue with deletion even if storage cleanup fails
       }
 

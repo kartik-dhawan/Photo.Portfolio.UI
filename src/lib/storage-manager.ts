@@ -1,7 +1,6 @@
 import { StorageProvider, UploadResult } from './storage';
 import { cloudinaryStorage } from './cloudinary';
-import { supabaseStorage } from './supabase-storage';
-import { isCloudinaryActive, isSupabaseActive } from './storage-config';
+import { isCloudinaryActive } from './storage-config';
 
 // Cloudinary limits (Free tier)
 const CLOUDINARY_LIMITS = {
@@ -11,12 +10,7 @@ const CLOUDINARY_LIMITS = {
 
 class StorageManager {
   private getProvider(): StorageProvider {
-    if (isCloudinaryActive()) {
-      return cloudinaryStorage;
-    } else if (isSupabaseActive()) {
-      return supabaseStorage;
-    }
-    throw new Error('No storage provider configured');
+    return cloudinaryStorage;
   }
 
   private validateFileSize(file: File): void {
@@ -24,7 +18,7 @@ class StorageManager {
     const fileSize = file.size;
     const maxSize = CLOUDINARY_LIMITS[type];
 
-    if (isCloudinaryActive() && fileSize > maxSize) {
+    if (fileSize > maxSize) {
       const maxSizeMB = maxSize / (1024 * 1024);
       const fileSizeMB = fileSize / (1024 * 1024);
       throw new Error(
