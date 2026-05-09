@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import BrandAvatar from '@/components/common/BrandAvatar';
 import ProfilePhoto from '@/components/ProfilePhoto';
+import StorageStats from '@/components/content/StorageStats';
 import { Brand } from '@/store/content';
 import { SocialLink } from '@/lib/socials';
 import { BrandWithProject } from '@/lib/content';
@@ -36,6 +37,7 @@ interface Props {
   profilePhotoUrl: string;
   aboutText: string;
   socials: SocialLink[];
+  userId: string;
 }
 
 export default function AboutContent({
@@ -43,7 +45,9 @@ export default function AboutContent({
   profilePhotoUrl,
   aboutText,
   socials,
+  userId,
 }: Props) {
+  console.log('AboutContent rendered with userId:', userId);
   const brands = groupBrandsByName(rawBrands);
 
   return (
@@ -216,6 +220,10 @@ export default function AboutContent({
           </div>
         </div>
       )}
+
+      {/* Storage Stats */}
+      <StorageStats userId={userId} />
+
       {/* Socials */}
       <div className="flex flex-col gap-6">
         <div className="border-t border-zinc-800" />

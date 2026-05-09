@@ -69,6 +69,7 @@ export default async function AboutPage({ params }: PageProps) {
         profilePhotoUrl={settings.profilePhotoUrl}
         aboutText={user.aboutText}
         socials={user.socials}
+        userId={user.uid}
       />
       <SocialLinksSection
         userId={user.uid}
