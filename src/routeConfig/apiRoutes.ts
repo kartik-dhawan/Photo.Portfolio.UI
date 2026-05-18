@@ -14,6 +14,7 @@ export const CONTENT_API_ROUTES = {
   save: (slug: string) => `${CONTENT_BASE}/${slug}`,
   settings: (slug: string) => `${CONTENT_BASE}/${slug}/settings`,
   upload: `${CONTENT_BASE}/upload`,
+  uploadSignature: `${CONTENT_BASE}/upload-signature`,
   deleteMedia: `${CONTENT_BASE}/delete-media`,
   allBrands: (userId: string) => `${CONTENT_BASE}/brands?userId=${userId}`,
   collections: (userId: string) => `${CONTENT_BASE}/collections?userId=${userId}`,

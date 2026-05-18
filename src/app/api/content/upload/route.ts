@@ -1,6 +1,8 @@
 import { verifyAuth } from "@/lib/auth";
 import { storageManager } from "@/lib/storage-manager";
 
+export const maxDuration = 60;
+
 // Cloudinary limits for better error messages
 const CLOUDINARY_LIMITS = {
   image: { size: 10 * 1024 * 1024, sizeMB: 10 }, // 10 MB

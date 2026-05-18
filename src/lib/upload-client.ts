@@ -1,3 +1,5 @@
+import { uploadToStorage } from "@/lib/upload";
+
 // Client-side upload utility with chunked upload support
 export interface UploadProgress {
   loaded: number;
@@ -15,18 +17,18 @@ export interface ChunkedUploadOptions {
 
 export class ChunkedUploader {
   private static readonly MAX_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
-  private static readonly SERVERLESS_LIMIT = 50 * 1024 * 1024; // 50MB hard limit
+  /** Direct Cloudinary upload — body size limit is Cloudinary/plan, not the app API route */
+  private static readonly MAX_UPLOAD = 100 * 1024 * 1024; // 100 MB (matches video cap in API)
 
   static async uploadWithChunks(options: ChunkedUploadOptions): Promise<{ publicUrl: string; path: string; type: "image" | "video" }> {
     const { file, slug, userId, onProgress, chunkSize = this.MAX_CHUNK_SIZE } = options;
     const fileSize = file.size;
 
-    // Check if file exceeds hard serverless limit
-    if (fileSize > this.SERVERLESS_LIMIT) {
+    if (fileSize > this.MAX_UPLOAD) {
       const fileSizeMB = fileSize / (1024 * 1024);
-      const limitMB = this.SERVERLESS_LIMIT / (1024 * 1024);
+      const limitMB = this.MAX_UPLOAD / (1024 * 1024);
       throw new Error(
-        `File size (${fileSizeMB.toFixed(2)} MB) exceeds serverless limit (${limitMB} MB). ` +
+        `File size (${fileSizeMB.toFixed(2)} MB) exceeds upload limit (${limitMB} MB). ` +
         `Please compress your file or use a file under ${limitMB} MB.`
       );
     }
@@ -44,22 +46,7 @@ export class ChunkedUploader {
   }
 
   private static async directUpload(file: File, slug: string, userId: string): Promise<{ publicUrl: string; path: string; type: "image" | "video" }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('slug', slug);
-    formData.append('userId', userId);
-
-    const response = await fetch('/api/content/upload', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Upload failed');
-    }
-
-    return response.json();
+    return uploadToStorage(slug, file, userId);
   }
 
   private static async compressAndUpload(
@@ -102,13 +89,13 @@ export class ChunkedUploader {
     const fileType = file.type.startsWith("video/") ? "video" : "image";
     
     // Serverless hard limits
-    const serverlessLimit = this.SERVERLESS_LIMIT;
+    const serverlessLimit = this.MAX_UPLOAD;
     if (fileSize > serverlessLimit) {
       const fileSizeMB = fileSize / (1024 * 1024);
       const limitMB = serverlessLimit / (1024 * 1024);
       return {
         isValid: false,
-        error: `${file.name} (${fileSizeMB.toFixed(2)} MB) exceeds serverless limit (${limitMB} MB)`,
+        error: `${file.name} (${fileSizeMB.toFixed(2)} MB) exceeds upload limit (${limitMB} MB)`,
         recommendation: `Compress your ${fileType} to under ${limitMB} MB or use a file compression tool`
       };
     }
