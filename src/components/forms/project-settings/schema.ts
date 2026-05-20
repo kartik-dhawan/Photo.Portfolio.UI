@@ -2,6 +2,7 @@ import * as yup from "yup";
 
 export const projectSettingsSchema = yup.object({
   label: yup.string().trim().required("Label is required"),
+  sectionName: yup.string().trim().default(""),
   filmedAt: yup.string().trim().default(""),
   pinned: yup.boolean().default(false),
   hideFromHome: yup.boolean().default(false),

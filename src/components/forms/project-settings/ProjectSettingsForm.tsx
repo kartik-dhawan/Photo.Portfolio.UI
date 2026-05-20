@@ -6,6 +6,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import BrandAvatar from '@/components/common/BrandAvatar';
 import { Brand } from '@/store/content';
 import { useFetchAllBrands, useUpdatePageSettings, useUpdateRouteLabel, useUploadMedia } from '@/hooks';
+import { sectionNamesEqual } from '@/lib/section-name';
 import {
   projectSettingsSchema,
   ProjectSettingsFormValues,
@@ -194,6 +195,9 @@ export default function ProjectSettingsForm({
 
       const routeData: Record<string, unknown> = {};
       if (values.label !== initialValues.label) routeData.label = values.label;
+      if (!sectionNamesEqual(values.sectionName, initialValues.sectionName)) {
+        routeData.sectionName = values.sectionName;
+      }
       if (values.pinned !== initialValues.pinned) routeData.pinned = !!values.pinned;
       if (values.hideFromHome !== initialValues.hideFromHome) routeData.hideFromHome = !!values.hideFromHome;
       if (values.excludeFromGallery !== initialValues.excludeFromGallery) routeData.excludeFromGallery = !!values.excludeFromGallery;
@@ -249,6 +253,18 @@ export default function ProjectSettingsForm({
           type="text"
           className={inputClass}
           placeholder="Route label"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+          Section Name
+        </span>
+        <input
+          {...register('sectionName')}
+          type="text"
+          className={inputClass}
+          placeholder="Section name (sidebar grouping)"
         />
       </div>
 

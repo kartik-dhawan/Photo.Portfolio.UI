@@ -245,8 +245,10 @@ export default function PageContent({
         id: routeId,
         data: {
           label: values.label,
+          sectionName: values.sectionName ?? '',
           pinned: !!values.pinned,
           hideFromHome: !!values.hideFromHome,
+          excludeFromGallery: !!values.excludeFromGallery,
         },
       })
     );
@@ -255,6 +257,7 @@ export default function PageContent({
 
   const defaultProjectFormValues: ProjectSettingsFormValues = {
     label: typeof pageLabel === 'string' ? pageLabel : '',
+    sectionName: navItem?.sectionName ?? '',
     filmedAt: filmedAt,
     pinned: !!navItem?.pinned,
     hideFromHome: !!navItem?.hideFromHome,

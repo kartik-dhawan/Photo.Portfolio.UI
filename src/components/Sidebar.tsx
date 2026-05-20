@@ -11,15 +11,25 @@ import { useTenant } from '@/components/TenantProvider';
 import AddRouteForm from '@/components/forms/route/AddRouteForm';
 import Skeleton from '@/components/common/Skeleton';
 import RouteLoaderIndicator from '@/components/common/RouteLoader';
+import { sectionGroupKey } from '@/lib/section-name';
 
-function groupBySectionName(items: NavItem[]): [string, NavItem[]][] {
-  const map = new Map<string, NavItem[]>();
+type SectionGroup = { key: string; heading: string; items: NavItem[] };
+
+function groupBySectionName(items: NavItem[]): SectionGroup[] {
+  const map = new Map<string, SectionGroup>();
   for (const item of items) {
-    const key = item.sectionName || '__default__';
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(item);
+    const raw = item.sectionName ?? "";
+    const key = sectionGroupKey(raw);
+    const existing = map.get(key);
+    if (existing) {
+      existing.items.push(item);
+    } else {
+      const heading =
+        key === "__default__" || key.startsWith("__") ? key : raw.trim() || key;
+      map.set(key, { key, heading, items: [item] });
+    }
   }
-  return [...map.entries()];
+  return [...map.values()];
 }
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -64,7 +74,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     setIsAdding(false);
   };
 
-  const footerIdx = sections.findIndex(([name]) => name === '__footer__');
+  const footerIdx = sections.findIndex((s) => s.key === '__footer__');
   const addRouteAfterIdx = footerIdx > 0 ? footerIdx - 1 : sections.length - 1;
 
   const isViewingOtherUser = role === "superAdmin" && authUid !== tenantUserId;
@@ -84,20 +94,28 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       )}
       {error && <span className="text-red-500 text-[10px]">{error}</span>}
 
-      {sections.map(([sectionName, sectionItems], idx, arr) => {
-        const isTitle = sectionName === '__title__';
-        const isFooter = sectionName === '__footer__';
+      {sections.map(({ key: sectionKey, heading, items: sectionItems }, idx) => {
+        const isTitle = sectionKey === '__title__';
+        const isFooter = sectionKey === '__footer__';
 
         let spacing = '';
         if (isTitle) spacing = 'pb-2';
         else if (isFooter) spacing = 'mt-auto pt-10';
         else spacing = 'mt-6';
 
+        const showSectionHeading =
+          !isTitle && !isFooter && sectionKey !== '__default__';
+
         return (
           <div
-            key={sectionName}
+            key={sectionKey}
             className={`${spacing} ${isFooter ? 'flex flex-col gap-3' : ''}`}
           >
+            {showSectionHeading && (
+              <p className="text-[10px] uppercase tracking-wider text-zinc-600 font-mono mb-1">
+                {heading}
+              </p>
+            )}
             {sectionItems.map((item) => {
               const isActive = pathname === prefixRoute(item.route);
 
