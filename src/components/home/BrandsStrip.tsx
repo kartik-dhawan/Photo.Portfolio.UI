@@ -22,9 +22,8 @@ export default function BrandsStrip({ brands }: Props) {
   const loopItems = [...singleCopy, ...singleCopy];
 
   return (
-    <div className="relative overflow-hidden w-[250px] md:w-[350px] mt-8">
-      <div className="absolute inset-y-0 -left-[80px] w-34 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, transparent 0%, #000 25%, #000 70%, transparent 100%)' }} />
-      <div className="absolute inset-y-0 -right-[80px] w-34 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, transparent 0%, #000 25%, #000 70%, transparent 100%)' }} />
+    <div className="relative w-[250px] md:w-[350px] mt-8" style={{ clipPath: 'inset(0)' }}>
+      <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, #000 0%, transparent 30%, transparent 70%, #000 100%)' }} />
       <div
         className="flex gap-5 items-center animate-marquee"
         style={{ width: "max-content" }}
