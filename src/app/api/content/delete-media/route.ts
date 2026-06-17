@@ -1,5 +1,7 @@
 import { verifyAuth } from "@/lib/auth";
+import { getAdminDb } from "@/firebase/admin";
 import { v2 as cloudinary } from "cloudinary";
+import { ContentBlock, MediaItem } from "@/store/content/types";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,19 +10,47 @@ cloudinary.config({
   secure: true,
 });
 
-// Extracts the public_id and resource_type from a Cloudinary secure_url.
-// Handles the optional version segment (v1714000000/) that Cloudinary includes.
-// e.g. https://res.cloudinary.com/x/image/upload/v123/photo-portfolio/uid/slug/abc.jpg
-//   → { resourceType: 'image', publicId: 'photo-portfolio/uid/slug/abc' }
 function parseCloudinaryUrl(
   url: string
 ): { publicId: string; resourceType: "image" | "video" | "raw" } | null {
   const m = url.match(/\/(image|video|raw)\/upload\/(?:v\d+\/)?(.+?)(?:\.\w+)?$/);
   if (!m) return null;
-  return {
-    resourceType: m[1] as "image" | "video" | "raw",
-    publicId: m[2],
-  };
+  return { resourceType: m[1] as "image" | "video" | "raw", publicId: m[2] };
+}
+
+function normalizeUrl(url: string): string {
+  return url.replace(/\/upload\/v\d+\//, "/upload/");
+}
+
+// Scan every content doc and settings doc across ALL users to collect
+// every Cloudinary URL that is currently in use.
+async function getAllReferencedUrls(): Promise<Set<string>> {
+  const db = getAdminDb();
+  const [contentSnapshot, settingsSnapshot] = await Promise.all([
+    db.collection("portfolio_content").get(),
+    db.collection("portfolio_settings").get(),
+  ]);
+
+  const refs = new Set<string>();
+
+  for (const doc of contentSnapshot.docs) {
+    const data = doc.data();
+    for (const block of (data.blocks ?? []) as ContentBlock[]) {
+      for (const media of (block.media ?? []) as MediaItem[]) {
+        if (media.url?.startsWith("http")) refs.add(normalizeUrl(media.url));
+      }
+    }
+    for (const brand of (data.brands ?? []) as { logoUrl?: string }[]) {
+      if (brand.logoUrl?.startsWith("http")) refs.add(normalizeUrl(brand.logoUrl));
+    }
+  }
+
+  for (const doc of settingsSnapshot.docs) {
+    const url = (doc.data() as { profilePhotoUrl?: string }).profilePhotoUrl;
+    if (url?.startsWith("http")) refs.add(normalizeUrl(url));
+  }
+
+  return refs;
 }
 
 export async function POST(request: Request) {
@@ -35,13 +65,23 @@ export async function POST(request: Request) {
       return Response.json({ error: "urls required" }, { status: 400 });
     }
 
-    // Group public_ids by resource_type so we call delete_resources once per type
+    // Check which URLs are still referenced by ANYONE (any user, any page).
+    // Called after the page save has already removed the reference for the
+    // requesting user, so any URL still in the set belongs to someone else.
+    const referencedUrls = await getAllReferencedUrls();
+
+    const toDelete = urls.filter((url) => !referencedUrls.has(normalizeUrl(url)));
+    const skipped = urls.length - toDelete.length;
+
+    if (toDelete.length === 0) {
+      return Response.json({ success: true, deleted: 0, skipped });
+    }
+
     const byType: Record<string, string[]> = {};
-    for (const url of urls) {
+    for (const url of toDelete) {
       const parsed = parseCloudinaryUrl(url);
       if (!parsed) continue;
-      const { resourceType, publicId } = parsed;
-      (byType[resourceType] ??= []).push(publicId);
+      (byType[parsed.resourceType] ??= []).push(parsed.publicId);
     }
 
     for (const [resourceType, publicIds] of Object.entries(byType)) {
@@ -58,7 +98,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, deleted: toDelete.length, skipped });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to delete media";
     return Response.json({ error: message }, { status: 500 });

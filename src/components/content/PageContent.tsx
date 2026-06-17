@@ -120,6 +120,14 @@ export default function PageContent({
     if (!draftBlockList || isSaving) return;
     setIsSaving(true);
 
+    // Capture remote URLs from the original saved content before we overwrite
+    const originalRemoteUrls = new Set<string>();
+    for (const block of effectivePage?.blocks ?? []) {
+      for (const media of (block.media ?? [])) {
+        if (media.url?.startsWith('http')) originalRemoteUrls.add(media.url);
+      }
+    }
+
     const blobToRemote = new Map<string, string>();
     const uploads = Array.from(pendingFiles.current.entries())
       .filter(([blobUrl]) => !removedBlobs.current.has(blobUrl))
@@ -149,6 +157,29 @@ export default function PageContent({
         brands,
       })
     );
+
+    // After the save is committed to Firestore, clean up Cloudinary assets that
+    // were removed. The delete API checks cross-user references so it will only
+    // delete an asset if no other page (any user) still references it.
+    const finalRemoteUrls = new Set(
+      finalBlocks.flatMap((b) =>
+        (b.media ?? []).map((m) => m.url).filter((u): u is string => !!u?.startsWith('http'))
+      )
+    );
+    const removedRemoteUrls = [...originalRemoteUrls].filter((u) => !finalRemoteUrls.has(u));
+    if (removedRemoteUrls.length > 0) {
+      const { getAuthToken } = await import('@/store/auth/slice');
+      const token = getAuthToken();
+      fetch('/api/content/delete-media', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ urls: removedRemoteUrls }),
+      }).catch(console.error);
+    }
+
     pendingFiles.current.clear();
     removedBlobs.current.clear();
     setIsSaving(false);
@@ -166,7 +197,8 @@ export default function PageContent({
       removedBlobs.current.add(url);
       URL.revokeObjectURL(url);
     }
-    // Remote Cloudinary URLs are soft-deleted: reference removed but asset kept in Bin
+    // Remote Cloudinary URLs: reference is removed from draft; Cloudinary cleanup
+    // happens after save via the delete-media API which checks cross-user refs.
   }, []);
 
   const handleAddBlock = (type: BlockType) => {
