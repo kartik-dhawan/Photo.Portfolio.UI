@@ -169,29 +169,54 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // ── Fetch Cloudinary assets and Firestore content in parallel ─────────────
-        const [imageResources, videoResources, contentSnapshot] = await Promise.all([
+        // ── Fetch Cloudinary assets, content, and settings in parallel ───────────
+        const db = getAdminDb();
+        const [imageResources, videoResources, contentSnapshot, settingsDoc] = await Promise.all([
             fetchAllResources(userId, 'image'),
             fetchAllResources(userId, 'video'),
-            getAdminDb().collection('portfolio_content').where('userId', '==', userId).get(),
+            db.collection('portfolio_content').where('userId', '==', userId).get(),
+            db.doc(`portfolio_settings/${userId}`).get(),
         ]);
 
         const images = buildCategoryStats(imageResources);
         const videos = buildCategoryStats(videoResources);
 
-        // ── Bin: Cloudinary assets not referenced in any content block ────────────
+        // ── Bin: Cloudinary assets not referenced anywhere ────────────────────────
+        // Cloudinary upload responses and the resources listing API may include or
+        // omit the version segment (v1714000000) in the URL. Normalise both sides
+        // by stripping it so comparison is reliable.
+        function normalizeUrl(url: string): string {
+            return url.replace(/\/upload\/v\d+\//, '/upload/');
+        }
+
         const referencedUrls = new Set<string>();
+
+        // 1. Block media (images/videos in page content)
         for (const doc of contentSnapshot.docs) {
             const data = doc.data();
             for (const block of (data.blocks ?? []) as ContentBlock[]) {
                 for (const media of (block.media ?? []) as MediaItem[]) {
-                    if (media.url?.startsWith('http')) referencedUrls.add(media.url);
+                    if (media.url?.startsWith('http')) referencedUrls.add(normalizeUrl(media.url));
                 }
+            }
+            // 2. Brand logos attached to each project
+            for (const brand of (data.brands ?? []) as { logoUrl?: string }[]) {
+                if (brand.logoUrl?.startsWith('http')) referencedUrls.add(normalizeUrl(brand.logoUrl));
             }
         }
 
-        const binImages = images.files.filter((f) => !referencedUrls.has(f.url));
-        const binVideos = videos.files.filter((f) => !referencedUrls.has(f.url));
+        // 3. Profile photo
+        const profilePhotoUrl = settingsDoc.exists
+            ? (settingsDoc.data() as { profilePhotoUrl?: string })?.profilePhotoUrl
+            : undefined;
+        if (profilePhotoUrl?.startsWith('http')) referencedUrls.add(normalizeUrl(profilePhotoUrl));
+
+        const binImages = images.files
+            .filter((f) => !referencedUrls.has(normalizeUrl(f.url)))
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const binVideos = videos.files
+            .filter((f) => !referencedUrls.has(normalizeUrl(f.url)))
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         const binBytes = [...binImages, ...binVideos].reduce((s, f) => s + f.bytes, 0);
 
         const totalBytes = images.totalBytes + videos.totalBytes;
