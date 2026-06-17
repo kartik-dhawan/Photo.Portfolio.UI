@@ -176,6 +176,63 @@ export async function getProjectCards(userId: string): Promise<ProjectCard[]> {
   return cards;
 }
 
+export async function getProjectCardsForSection(
+  userId: string,
+  targetSlug: string
+): Promise<{ sectionName: string; projects: ProjectCard[] } | null> {
+  const { slugMatchesSection } = await import("./section-name");
+  const db = getAdminDb();
+  const [contentSnapshot, routesSnapshot] = await Promise.all([
+    db.collection(COLLECTION).where("userId", "==", userId).get(),
+    db.collection("portfolio_routes").where("userId", "==", userId).orderBy("order", "asc").get(),
+  ]);
+
+  // Find routes belonging to this section
+  const sectionRoutes = routesSnapshot.docs.filter((doc) =>
+    slugMatchesSection(targetSlug, doc.data().sectionName as string | undefined)
+  );
+  if (sectionRoutes.length === 0) return null;
+
+  const sectionName = sectionRoutes[0].data().sectionName as string;
+
+  const contentMap = new Map<string, { thumbnail?: string; tags?: string[]; filmedAt?: string; brandNames?: string[] }>();
+  for (const doc of contentSnapshot.docs) {
+    const data = doc.data() as PageContent & { slug: string };
+    let thumb: string | undefined;
+    for (const block of data.blocks ?? []) {
+      if (block.type === "image") {
+        const img = (block.media ?? []).find((m) => m.type === "image");
+        if (img) { thumb = img.url; break; }
+      }
+    }
+    contentMap.set(data.slug, {
+      thumbnail: thumb,
+      tags: data.tags,
+      filmedAt: data.filmedAt,
+      brandNames: (data.brands ?? []).map((b) => b.name),
+    });
+  }
+
+  const projects: ProjectCard[] = [];
+  for (const doc of sectionRoutes) {
+    const data = doc.data();
+    if (data.hidden) continue; // respect visibility; hideFromHome doesn't apply here
+    const slug = (data.route as string)?.replace(/^\//, "");
+    if (!slug) continue;
+    const content = contentMap.get(slug);
+    projects.push({
+      slug,
+      label: data.label as string,
+      thumbnail: content?.thumbnail,
+      tags: content?.tags,
+      filmedAt: content?.filmedAt,
+      brandNames: content?.brandNames,
+    });
+  }
+
+  return { sectionName, projects };
+}
+
 export async function getAllMedia(
   userId: string,
   page: number = 1,

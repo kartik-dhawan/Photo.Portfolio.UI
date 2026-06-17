@@ -11,7 +11,7 @@ import { useTenant } from '@/components/TenantProvider';
 import AddRouteForm from '@/components/forms/route/AddRouteForm';
 import Skeleton from '@/components/common/Skeleton';
 import RouteLoaderIndicator from '@/components/common/RouteLoader';
-import { sectionGroupKey } from '@/lib/section-name';
+import { sectionGroupKey, sectionSlug } from '@/lib/section-name';
 
 type SectionGroup = { key: string; heading: string; items: NavItem[] };
 
@@ -112,9 +112,13 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             className={`${spacing} ${isFooter ? 'flex flex-col gap-3' : ''}`}
           >
             {showSectionHeading && (
-              <p className="text-[10px] uppercase tracking-wider text-zinc-600 font-mono mb-1">
+              <Link
+                href={prefixRoute(`/sec/${sectionSlug(heading)}`)}
+                onClick={onNavigate}
+                className="text-[10px] uppercase tracking-wider text-zinc-600 hover:text-zinc-300 font-mono mb-1 transition-colors"
+              >
                 {heading}
-              </p>
+              </Link>
             )}
             {sectionItems.map((item) => {
               const isActive = pathname === prefixRoute(item.route);

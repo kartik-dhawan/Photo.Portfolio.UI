@@ -1,9 +1,10 @@
 import { Metadata } from "next";
 import { getUserByUsername } from "@/lib/users";
 import { getNavItems } from "@/lib/navItems";
-import { getPageContent } from "@/lib/content";
+import { getPageContent, getProjectCardsForSection } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 import PageContent from "@/components/content/PageContent";
+import SectionPageView from "@/components/content/SectionPageView";
 
 export const revalidate = 60;
 
@@ -88,13 +89,34 @@ export default async function SectionPage({ params }: PageProps) {
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
 
+  // Known project → render it
+  if (navItem || content) {
+    return (
+      <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
+        <PageContent
+          slug={slug}
+          initialContent={content}
+          initialLabel={navItem?.label ?? slug}
+          initialRouteId={navItem?.id ?? ""}
+        />
+      </div>
+    );
+  }
+
+  // Check if slug matches a section name
+  const sectionData = await getProjectCardsForSection(user.uid, slug);
+  if (sectionData) {
+    return <SectionPageView sectionName={sectionData.sectionName} projects={sectionData.projects} />;
+  }
+
+  // No project and no section — render empty editable page
   return (
     <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
       <PageContent
         slug={slug}
-        initialContent={content}
-        initialLabel={navItem?.label ?? slug}
-        initialRouteId={navItem?.id ?? ""}
+        initialContent={null}
+        initialLabel={slug}
+        initialRouteId={""}
       />
     </div>
   );

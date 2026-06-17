@@ -1,6 +1,7 @@
 import { getUserByUsername } from "@/lib/users";
-import { getAllMedia, getProjectCards, getPageContent } from "@/lib/content";
+import { getAllMedia, getProjectCards, getPageContent, getProjectCardsForSection } from "@/lib/content";
 import { getNavItems } from "@/lib/navItems";
+import SectionPageView from "@/components/content/SectionPageView";
 import FloatingPaths from "@/components/home/FloatingPaths";
 import ScrollToWork from "@/components/home/ScrollToWork";
 import StickyHeader from "@/components/common/StickyHeader";
@@ -85,22 +86,30 @@ export default async function UserHomePage({ params }: PageProps) {
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
-  if (!navItem && !content) {
+
+  // Known project → render it
+  if (navItem || content) {
     return (
-      <div className="flex items-center justify-center min-h-[80vh]">
-        <p className="text-zinc-600 text-sm font-mono">Page not found</p>
+      <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
+        <PageContent
+          slug={slug}
+          initialContent={content}
+          initialLabel={navItem?.label ?? slug}
+          initialRouteId={navItem?.id ?? ""}
+        />
       </div>
     );
   }
 
+  // Check if slug matches a section name
+  const sectionData = await getProjectCardsForSection(defaultUser.uid, slug);
+  if (sectionData) {
+    return <SectionPageView sectionName={sectionData.sectionName} projects={sectionData.projects} />;
+  }
+
   return (
-    <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
-      <PageContent
-        slug={slug}
-        initialContent={content}
-        initialLabel={navItem?.label ?? slug}
-        initialRouteId={navItem?.id ?? ""}
-      />
+    <div className="flex items-center justify-center min-h-[80vh]">
+      <p className="text-zinc-600 text-sm font-mono">Page not found</p>
     </div>
   );
 }

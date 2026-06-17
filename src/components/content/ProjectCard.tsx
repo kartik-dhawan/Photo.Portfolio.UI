@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ProjectCard as ProjectCardType } from "@/lib/content";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { updateNavItem } from "@/store/nav";
 import { useTenant } from "@/components/TenantProvider";
+import { sectionSlug, sectionGroupKey } from "@/lib/section-name";
 
 interface Props {
   project: ProjectCardType;
@@ -13,12 +15,18 @@ interface Props {
 
 export default function ProjectCard({ project }: Props) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { isAuthenticated, uid: authUid, role } = useAppSelector((s) => s.auth);
-  const { userId: tenantUserId } = useTenant();
+  const { userId: tenantUserId, prefixRoute } = useTenant();
   const isAdmin = isAuthenticated && (role === "superAdmin" || authUid === tenantUserId);
   const { items: navItems } = useAppSelector((s) => s.nav);
 
   const navItem = navItems.find((n) => n.route === `/${project.slug}`);
+
+  const rawSection = navItem?.sectionName;
+  const sectionKey = rawSection ? sectionGroupKey(rawSection) : null;
+  const showSection = rawSection && sectionKey && !sectionKey.startsWith("__");
+  const sectionHref = showSection ? prefixRoute(`/sec/${sectionSlug(rawSection!)}`) : null;
 
   const dateBrand: string[] = [];
   if (project.filmedAt) {
@@ -73,6 +81,14 @@ export default function ProjectCard({ project }: Props) {
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end">
         <div className="p-4 flex flex-col gap-1 w-full">
+          {showSection && sectionHref && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(sectionHref); }}
+              className="self-start text-[9px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              {rawSection}
+            </button>
+          )}
           <div className="flex items-center gap-2">
             <svg
               width="16"
