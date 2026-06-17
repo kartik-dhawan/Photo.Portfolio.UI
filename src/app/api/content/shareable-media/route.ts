@@ -1,6 +1,7 @@
 import { verifyAuth } from "@/lib/auth";
 import { getAdminDb } from "@/firebase/admin";
 import { ContentBlock, MediaItem } from "@/store/content/types";
+import type { Timestamp } from "firebase-admin/firestore";
 
 export interface ShareableMediaItem {
   url: string;
@@ -11,6 +12,22 @@ export interface ShareableMediaItem {
   ownerUsername: string;
   ownerDisplayName: string;
   isOwnContent: boolean;
+  contentDate: string; // ISO timestamp from the content doc's updatedAt/createdAt
+}
+
+type RawItem = Omit<ShareableMediaItem, "ownerUsername" | "ownerDisplayName">;
+
+function toIso(ts: unknown): string {
+  if (!ts) return new Date(0).toISOString();
+  // Firestore Timestamp object
+  if (typeof (ts as Timestamp).toDate === "function") {
+    return (ts as Timestamp).toDate().toISOString();
+  }
+  // ISO string (stored via new Date().toISOString())
+  if (typeof ts === "string") return ts;
+  // Epoch millis
+  if (typeof ts === "number") return new Date(ts).toISOString();
+  return new Date(0).toISOString();
 }
 
 export async function GET(request: Request) {
@@ -23,36 +40,44 @@ export async function GET(request: Request) {
   const filter = searchParams.get("filter") === "all" ? "all" : "mine";
 
   const db = getAdminDb();
-  // Collect items before user enrichment
-  const rawItems: Omit<ShareableMediaItem, "ownerUsername" | "ownerDisplayName">[] = [];
+  const rawItems: RawItem[] = [];
 
-  // Always include current user's own images (regardless of isShareable)
-  const [myContentSnapshot, myRoutesSnapshot] = await Promise.all([
-    db.collection("portfolio_content").where("userId", "==", authUser.uid).get(),
-    db.collection("portfolio_routes").where("userId", "==", authUser.uid).get(),
-  ]);
+  if (filter === "mine") {
+    const [myContentSnapshot, myRoutesSnapshot] = await Promise.all([
+      db.collection("portfolio_content").where("userId", "==", authUser.uid).get(),
+      db.collection("portfolio_routes").where("userId", "==", authUser.uid).get(),
+    ]);
 
-  const myRouteLabels = new Map<string, string>();
-  for (const doc of myRoutesSnapshot.docs) {
-    const data = doc.data();
-    const slug = (data.route as string)?.replace(/^\//, "");
-    if (slug) myRouteLabels.set(slug, data.label as string);
-  }
+    const myRouteLabels = new Map<string, string>();
+    for (const doc of myRoutesSnapshot.docs) {
+      const data = doc.data();
+      const slug = (data.route as string)?.replace(/^\//, "");
+      if (slug) myRouteLabels.set(slug, data.label as string);
+    }
 
-  for (const doc of myContentSnapshot.docs) {
-    const data = doc.data();
-    const slug = data.slug as string;
-    const projectName = myRouteLabels.get(slug) ?? slug;
-    for (const block of (data.blocks ?? []) as ContentBlock[]) {
-      if (block.type !== "image") continue;
-      for (const media of (block.media ?? []) as MediaItem[]) {
-        if (media.type !== "image" || !media.url?.startsWith("http")) continue;
-        rawItems.push({ url: media.url, type: "image", projectSlug: slug, projectName, ownerUserId: authUser.uid, isOwnContent: true });
+    for (const doc of myContentSnapshot.docs) {
+      const data = doc.data();
+      const slug = data.slug as string;
+      const projectName = myRouteLabels.get(slug) ?? slug;
+      const contentDate = toIso(data.updatedAt ?? data.createdAt);
+      for (const block of (data.blocks ?? []) as ContentBlock[]) {
+        if (block.type !== "image") continue;
+        for (const media of (block.media ?? []) as MediaItem[]) {
+          if (media.type !== "image" || !media.url?.startsWith("http")) continue;
+          rawItems.push({
+            url: media.url,
+            type: "image",
+            projectSlug: slug,
+            projectName,
+            ownerUserId: authUser.uid,
+            isOwnContent: true,
+            contentDate,
+          });
+        }
       }
     }
-  }
-
-  if (filter === "all") {
+  } else {
+    // filter === "all": only other users' shareable content
     const shareableRoutesSnapshot = await db
       .collection("portfolio_routes")
       .where("isShareable", "==", true)
@@ -76,10 +101,9 @@ export async function GET(request: Request) {
         return `${data.userId}_${slug}`;
       });
 
-      const contentRefs = contentDocIds.map((id) =>
-        db.collection("portfolio_content").doc(id)
+      const contentDocs = await db.getAll(
+        ...contentDocIds.map((id) => db.collection("portfolio_content").doc(id))
       );
-      const contentDocs = await db.getAll(...contentRefs);
 
       for (const doc of contentDocs) {
         if (!doc.exists) continue;
@@ -87,19 +111,28 @@ export async function GET(request: Request) {
         const ownerUserId = data.userId as string;
         const slug = data.slug as string;
         const projectName = routeLabelMap.get(`${ownerUserId}_${slug}`) ?? slug;
+        const contentDate = toIso(data.updatedAt ?? data.createdAt);
 
         for (const block of (data.blocks ?? []) as ContentBlock[]) {
           if (block.type !== "image") continue;
           for (const media of (block.media ?? []) as MediaItem[]) {
             if (media.type !== "image" || !media.url?.startsWith("http")) continue;
-            rawItems.push({ url: media.url, type: "image", projectSlug: slug, projectName, ownerUserId, isOwnContent: false });
+            rawItems.push({
+              url: media.url,
+              type: "image",
+              projectSlug: slug,
+              projectName,
+              ownerUserId,
+              isOwnContent: false,
+              contentDate,
+            });
           }
         }
       }
     }
   }
 
-  // Deduplicate by URL (own content takes precedence)
+  // Deduplicate by URL
   const seen = new Set<string>();
   const deduped = rawItems.filter((item) => {
     if (seen.has(item.url)) return false;
@@ -107,19 +140,24 @@ export async function GET(request: Request) {
     return true;
   });
 
-  // Enrich with user display info (batch-fetch unique owner UIDs)
+  // Sort by contentDate descending (most recently updated first)
+  deduped.sort((a, b) => b.contentDate.localeCompare(a.contentDate));
+
+  // Enrich with user display info
   const ownerUids = [...new Set(deduped.map((i) => i.ownerUserId))];
-  const userDocs = await db.getAll(
-    ...ownerUids.map((uid) => db.collection("users").doc(uid))
-  );
   const userMap = new Map<string, { username: string; displayName: string }>();
-  for (const doc of userDocs) {
-    if (!doc.exists) continue;
-    const d = doc.data()!;
-    userMap.set(doc.id, {
-      username: (d.username as string) ?? "",
-      displayName: (d.displayName as string) ?? "",
-    });
+  if (ownerUids.length > 0) {
+    const userDocs = await db.getAll(
+      ...ownerUids.map((uid) => db.collection("users").doc(uid))
+    );
+    for (const doc of userDocs) {
+      if (!doc.exists) continue;
+      const d = doc.data()!;
+      userMap.set(doc.id, {
+        username: (d.username as string) ?? "",
+        displayName: (d.displayName as string) ?? "",
+      });
+    }
   }
 
   const total = deduped.length;
