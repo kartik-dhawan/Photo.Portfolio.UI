@@ -1,5 +1,5 @@
 import { getUserByUsername } from "@/lib/users";
-import { getAllMedia, getProjectCards, getPageContent, getProjectCardsForSection } from "@/lib/content";
+import { getAllMedia, getProjectCards, getPageContent, getProjectCardsForSection, getAllSections, getAllBrands } from "@/lib/content";
 import { getNavItems } from "@/lib/navItems";
 import SectionPageView from "@/components/content/SectionPageView";
 import FloatingPaths from "@/components/home/FloatingPaths";
@@ -9,6 +9,7 @@ import ProjectsGrid from "@/components/content/ProjectsGrid";
 import CollectionsGrid from "@/components/content/CollectionsGrid";
 import PageContent from "@/components/content/PageContent";
 import AdminRedirect from "@/components/AdminRedirect";
+import BrandsStrip from "@/components/home/BrandsStrip";
 
 export const revalidate = 60;
 
@@ -25,10 +26,22 @@ export default async function UserHomePage({ params }: PageProps) {
 
   if (user) {
     // Real username — render their home page
-    const [{ items, total }, projects] = await Promise.all([
+    const [{ items, total }, projects, allBrands] = await Promise.all([
       getAllMedia(user.uid, 1, PAGE_SIZE),
       getProjectCards(user.uid),
+      getAllBrands(user.uid),
     ]);
+    // Deduplicate by name, keep only brands with a logo
+    const seen = new Set<string>();
+    const brands = allBrands
+      .filter((b) => {
+        if (!b.logoUrl?.startsWith("http")) return false;
+        const key = b.name.toLowerCase().trim();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((b) => ({ name: b.name, logoUrl: b.logoUrl, socialUrl: b.socialUrl }));
 
     const heroTitle = user.heroTitle || "Portfolio";
     const heroSubtitle = user.heroSubtitle || "";
@@ -37,7 +50,7 @@ export default async function UserHomePage({ params }: PageProps) {
       <div className="flex flex-col">
         <AdminRedirect />
         <StickyHeader title={heroTitle} />
-        <div className="relative flex flex-col min-h-[80vh] overflow-hidden px-6 md:px-8 pt-12 md:pt-20">
+        <div className="relative flex flex-col min-h-[55vh] md:min-h-[80vh] overflow-hidden px-6 md:px-8 pt-10 md:pt-20">
           <div className="absolute inset-0">
             <FloatingPaths position={1} />
             <FloatingPaths position={-1} />
@@ -52,6 +65,7 @@ export default async function UserHomePage({ params }: PageProps) {
               </p>
             )}
             <ScrollToWork />
+            <BrandsStrip brands={brands} />
           </div>
         </div>
 
@@ -102,9 +116,23 @@ export default async function UserHomePage({ params }: PageProps) {
   }
 
   // Check if slug matches a section name
-  const sectionData = await getProjectCardsForSection(defaultUser.uid, slug);
+  const [sectionData, allSections] = await Promise.all([
+    getProjectCardsForSection(defaultUser.uid, slug),
+    getAllSections(defaultUser.uid),
+  ]);
   if (sectionData) {
-    return <SectionPageView sectionName={sectionData.sectionName} projects={sectionData.projects} />;
+    const otherSections = allSections
+      .filter((s) => s.slug !== slug)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2)
+      .map((s) => ({ name: s.name, href: `/sec/${s.slug}` }));
+    return (
+      <SectionPageView
+        sectionName={sectionData.sectionName}
+        projects={sectionData.projects}
+        otherSections={otherSections}
+      />
+    );
   }
 
   return (

@@ -233,6 +233,36 @@ export async function getProjectCardsForSection(
   return { sectionName, projects };
 }
 
+export async function getAllSections(
+  userId: string
+): Promise<{ name: string; slug: string }[]> {
+  const { sectionSlug, sectionGroupKey } = await import("./section-name");
+  const db = getAdminDb();
+  const snapshot = await db
+    .collection("portfolio_routes")
+    .where("userId", "==", userId)
+    .orderBy("order", "asc")
+    .get();
+
+  // A section is valid only when it has at least one non-hidden route
+  const sectionMap = new Map<string, { name: string; slug: string; hasVisible: boolean }>();
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    const raw = (data.sectionName as string | undefined)?.trim();
+    if (!raw) continue;
+    const key = sectionGroupKey(raw);
+    if (key.startsWith("__")) continue;
+    const isHidden = !!data.hidden;
+    if (!sectionMap.has(key)) {
+      sectionMap.set(key, { name: raw, slug: sectionSlug(raw), hasVisible: !isHidden });
+    } else if (!isHidden) {
+      sectionMap.get(key)!.hasVisible = true;
+    }
+  }
+  return [...sectionMap.values()].filter((s) => s.hasVisible);
+}
+
+
 export async function getAllMedia(
   userId: string,
   page: number = 1,

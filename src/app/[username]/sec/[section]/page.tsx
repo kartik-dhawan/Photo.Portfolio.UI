@@ -1,5 +1,5 @@
 import { getUserByUsername } from "@/lib/users";
-import { getProjectCardsForSection } from "@/lib/content";
+import { getProjectCardsForSection, getAllSections } from "@/lib/content";
 import SectionPageView from "@/components/content/SectionPageView";
 
 export const revalidate = 60;
@@ -21,7 +21,10 @@ export default async function SectionRoute({ params }: PageProps) {
   const user = await resolveUser(username);
   if (!user) return null;
 
-  const sectionData = await getProjectCardsForSection(user.uid, section);
+  const [sectionData, allSections] = await Promise.all([
+    getProjectCardsForSection(user.uid, section),
+    getAllSections(user.uid),
+  ]);
 
   if (!sectionData) {
     return (
@@ -31,10 +34,18 @@ export default async function SectionRoute({ params }: PageProps) {
     );
   }
 
+  const sectionBase = `/${username}/sec`;
+  const otherSections = allSections
+    .filter((s) => s.slug !== section)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 2)
+    .map((s) => ({ name: s.name, href: `${sectionBase}/${s.slug}` }));
+
   return (
     <SectionPageView
       sectionName={sectionData.sectionName}
       projects={sectionData.projects}
+      otherSections={otherSections}
     />
   );
 }

@@ -9,14 +9,14 @@ export default function GridRects() {
   if (!mounted) return null;
 
   // Concentric rectangles filling the viewBox from outside in
-  const rects = Array.from({ length: 24 }, (_, i) => ({
+  const rects = Array.from({ length: 48 }, (_, i) => ({
     id: i,
-    x: i * 14,
-    y: i * 8,
-    width: 696 - i * 28,
-    height: 316 - i * 16,
-    strokeWidth: 0.3 + i * 0.025,
-    opacity: 0.04 + i * 0.012,
+    x: i * 7,
+    y: i * 4,
+    width: 696 - i * 14,
+    height: 316 - i * 8,
+    strokeWidth: 0.5 + i * 0.02,
+    opacity: 0.12 + i * 0.01,
   }));
 
   return (
@@ -34,17 +34,17 @@ export default function GridRects() {
             strokeWidth={r.strokeWidth}
             strokeOpacity={r.opacity}
             fill="none"
-            initial={{ pathLength: 0.2, opacity: 0.3 }}
+            initial={{ pathLength: 0.2, opacity: 0.4 }}
             animate={{
               pathLength: 1,
-              opacity: [0.15, r.opacity * 6, 0.15],
+              opacity: [r.opacity, r.opacity * 4, r.opacity],
               pathOffset: [0, 1, 0],
             }}
             transition={{
-              duration: 18 + (r.id % 8) * 2,
+              duration: 14 + (r.id % 8) * 1.5,
               repeat: Infinity,
               ease: "linear",
-              delay: r.id * 0.35,
+              delay: r.id * 0.18,
             }}
           />
         ))}

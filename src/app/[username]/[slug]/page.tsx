@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { getUserByUsername } from "@/lib/users";
 import { getNavItems } from "@/lib/navItems";
-import { getPageContent, getProjectCardsForSection } from "@/lib/content";
+import { getPageContent, getProjectCardsForSection, getAllSections } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 import PageContent from "@/components/content/PageContent";
 import SectionPageView from "@/components/content/SectionPageView";
@@ -104,9 +104,23 @@ export default async function SectionPage({ params }: PageProps) {
   }
 
   // Check if slug matches a section name
-  const sectionData = await getProjectCardsForSection(user.uid, slug);
+  const [sectionData, allSections] = await Promise.all([
+    getProjectCardsForSection(user.uid, slug),
+    getAllSections(user.uid),
+  ]);
   if (sectionData) {
-    return <SectionPageView sectionName={sectionData.sectionName} projects={sectionData.projects} />;
+    const otherSections = allSections
+      .filter((s) => s.slug !== slug)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2)
+      .map((s) => ({ name: s.name, href: `/sec/${s.slug}` }));
+    return (
+      <SectionPageView
+        sectionName={sectionData.sectionName}
+        projects={sectionData.projects}
+        otherSections={otherSections}
+      />
+    );
   }
 
   // No project and no section — render empty editable page

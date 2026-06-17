@@ -4,9 +4,15 @@ import { ProjectCard } from "@/lib/content";
 import GridRects from "@/components/home/GridRects";
 import StickyHeader from "@/components/common/StickyHeader";
 
+interface OtherSection {
+  name: string;
+  href: string;
+}
+
 interface Props {
   sectionName: string;
   projects: ProjectCard[];
+  otherSections?: OtherSection[];
 }
 
 function SectionCard({ project }: { project: ProjectCard }) {
@@ -72,18 +78,27 @@ function SectionCard({ project }: { project: ProjectCard }) {
   );
 }
 
-export default function SectionPageView({ sectionName, projects }: Props) {
+export default function SectionPageView({ sectionName, projects, otherSections }: Props) {
   return (
     <div className="flex flex-col">
       <StickyHeader title={sectionName} />
 
       {/* Hero */}
-      <div className="relative flex flex-col min-h-[45vh] overflow-hidden px-6 md:px-8 pt-12 md:pt-20">
+      <div className="relative flex flex-col min-h-[35vh] md:min-h-[45vh] overflow-hidden px-6 md:px-8 pt-12 md:pt-20">
         <div className="absolute inset-0">
           <GridRects />
         </div>
-        <div className="relative z-10 flex flex-col gap-4 justify-end h-full pb-10">
-          <h1 className="font-mono text-white text-3xl md:text-5xl xl:text-7xl uppercase tracking-wider leading-tight">
+        <div className="relative z-10 flex flex-col gap-3 justify-end h-full pb-6 md:pb-10">
+          <Link
+            href="/"
+            className="self-start flex items-center gap-1 text-zinc-500 hover:text-zinc-300 text-[10px] font-mono uppercase tracking-wider transition-colors mb-1"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Home
+          </Link>
+          <h1 className="font-mono text-white text-2xl md:text-5xl xl:text-7xl uppercase tracking-wider leading-tight">
             {sectionName}
           </h1>
           <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">
@@ -93,7 +108,7 @@ export default function SectionPageView({ sectionName, projects }: Props) {
       </div>
 
       {/* Grid */}
-      <div className="px-3 md:px-6 xl:px-24 py-12">
+      <div className="px-6 md:px-8 pt-6 md:pt-12 pb-12">
         {projects.length === 0 ? (
           <p className="text-zinc-600 text-sm font-mono">No projects in this section yet.</p>
         ) : (
@@ -104,6 +119,41 @@ export default function SectionPageView({ sectionName, projects }: Props) {
           </div>
         )}
       </div>
+
+      {/* Other sections */}
+      {otherSections && otherSections.length > 0 && (
+        <div className="px-6 md:px-8 pb-16 border-t border-zinc-800 pt-10">
+          <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-4">
+            View more sections
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {otherSections.map((s) => (
+              <Link
+                key={s.href}
+                href={s.href}
+                className="group flex items-center justify-between border border-zinc-800 hover:border-zinc-500 rounded px-4 py-4 md:px-5 md:py-6 transition-colors"
+              >
+                <span className="font-mono uppercase tracking-wider text-sm text-zinc-400 group-hover:text-white transition-colors">
+                  {s.name}
+                </span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-zinc-600 group-hover:text-zinc-300 transition-colors shrink-0"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
