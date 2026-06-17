@@ -47,7 +47,6 @@ export default function AboutContent({
   socials,
   userId,
 }: Props) {
-  console.log('AboutContent rendered with userId:', userId);
   const brands = groupBrandsByName(rawBrands);
 
   return (

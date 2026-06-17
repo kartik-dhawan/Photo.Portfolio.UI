@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAppSelector } from '@/store';
 
 interface StorageStats {
   userId: string;
@@ -35,47 +36,41 @@ interface StorageStatsProps {
 }
 
 export default function StorageStats({ userId }: StorageStatsProps) {
-  console.log('StorageStats component rendering with userId:', userId);
+  const { isAuthenticated, uid, role } = useAppSelector((s) => s.auth);
+  const canView = isAuthenticated && (role === 'superAdmin' || uid === userId);
 
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('StorageStats component mounted with userId:', userId);
+    if (!canView || !userId) return;
 
     async function fetchStorageStats() {
       try {
         setLoading(true);
         setError(null);
 
-        console.log('Making API call to:', `/api/content/storageStats?userId=${userId}`);
         const response = await fetch(`/api/content/storageStats?userId=${userId}`);
-
-        console.log('API response status:', response.status);
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.log('API error response:', errorText);
           throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('Storage Stats API response:', data);
         setStats(data);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch storage stats';
-        console.error('Error fetching storage stats:', err);
-        setError(errorMessage);
+        setError(err instanceof Error ? err.message : 'Failed to fetch storage stats');
       } finally {
         setLoading(false);
       }
     }
 
-    if (userId) {
-      fetchStorageStats();
-    }
-  }, [userId]);
+    fetchStorageStats();
+  }, [userId, canView]);
+
+  if (!canView) return null;
 
   if (loading) {
     return (
