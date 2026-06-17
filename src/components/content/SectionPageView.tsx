@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ProjectCard } from "@/lib/content";
 import GridRects from "@/components/home/GridRects";
 import StickyHeader from "@/components/common/StickyHeader";
+import ViewMoreSections from "@/components/content/ViewMoreSections";
 
 interface OtherSection {
   name: string;
@@ -120,38 +121,9 @@ export default function SectionPageView({ sectionName, projects, otherSections }
         )}
       </div>
 
-      {/* Other sections */}
       {otherSections && otherSections.length > 0 && (
-        <div className="px-6 md:px-8 pb-16 border-t border-zinc-800 pt-10">
-          <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-4">
-            View more sections
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {otherSections.map((s) => (
-              <Link
-                key={s.href}
-                href={s.href}
-                className="group flex items-center justify-between border border-zinc-800 hover:border-zinc-500 rounded px-4 py-4 md:px-5 md:py-6 transition-colors"
-              >
-                <span className="font-mono uppercase tracking-wider text-sm text-zinc-400 group-hover:text-white transition-colors">
-                  {s.name}
-                </span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-zinc-600 group-hover:text-zinc-300 transition-colors shrink-0"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </Link>
-            ))}
-          </div>
+        <div className="px-6 md:px-8">
+          <ViewMoreSections sections={otherSections} title="View more sections" />
         </div>
       )}
     </div>

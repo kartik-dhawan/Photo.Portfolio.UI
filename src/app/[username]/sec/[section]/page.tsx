@@ -34,7 +34,8 @@ export default async function SectionRoute({ params }: PageProps) {
     );
   }
 
-  const sectionBase = `/${username}/sec`;
+  // Use named-user prefix only when the URL username matches the resolved user
+  const sectionBase = user.username === username ? `/${username}/sec` : "/sec";
   const otherSections = allSections
     .filter((s) => s.slug !== section)
     .sort(() => Math.random() - 0.5)

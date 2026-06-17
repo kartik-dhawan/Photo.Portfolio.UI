@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getUserByUsername } from "@/lib/users";
 import { getNavItems } from "@/lib/navItems";
 import { getPageContent, getProjectCardsForSection, getAllSections } from "@/lib/content";
+import ViewMoreSections from "@/components/content/ViewMoreSections";
 import { getSettings } from "@/lib/settings";
 import PageContent from "@/components/content/PageContent";
 import SectionPageView from "@/components/content/SectionPageView";
@@ -82,38 +83,51 @@ export default async function SectionPage({ params }: PageProps) {
   const user = await resolveUser(username);
   if (!user) return null;
 
-  const [content, navItems] = await Promise.all([
+  const [content, navItems, allSections] = await Promise.all([
     getPageContent(user.uid, slug),
     getNavItems(user.uid),
+    getAllSections(user.uid),
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
 
+  // If the URL username matches the resolved user, we're in named-user mode (e.g. /kartik/slug).
+  // Otherwise the "username" segment is actually a slug/section (clean-URL or custom-domain mode).
+  const sectionBase = user.username === username ? `/${username}/sec` : "/sec";
+
   // Known project → render it
   if (navItem || content) {
+    const currentSectionSlug = navItem?.sectionName
+      ? (await import("@/lib/section-name")).sectionSlug(navItem.sectionName)
+      : null;
+    const otherSections = allSections
+      .filter((s) => s.slug !== currentSectionSlug)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2)
+      .map((s) => ({ name: s.name, href: `${sectionBase}/${s.slug}` }));
     return (
-      <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
-        <PageContent
-          slug={slug}
-          initialContent={content}
-          initialLabel={navItem?.label ?? slug}
-          initialRouteId={navItem?.id ?? ""}
-        />
+      <div className="flex flex-col">
+        <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
+          <PageContent
+            slug={slug}
+            initialContent={content}
+            initialLabel={navItem?.label ?? slug}
+            initialRouteId={navItem?.id ?? ""}
+          />
+        </div>
+        <ViewMoreSections sections={otherSections} />
       </div>
     );
   }
 
   // Check if slug matches a section name
-  const [sectionData, allSections] = await Promise.all([
-    getProjectCardsForSection(user.uid, slug),
-    getAllSections(user.uid),
-  ]);
+  const sectionData = await getProjectCardsForSection(user.uid, slug);
   if (sectionData) {
     const otherSections = allSections
       .filter((s) => s.slug !== slug)
       .sort(() => Math.random() - 0.5)
       .slice(0, 2)
-      .map((s) => ({ name: s.name, href: `/sec/${s.slug}` }));
+      .map((s) => ({ name: s.name, href: `${sectionBase}/${s.slug}` }));
     return (
       <SectionPageView
         sectionName={sectionData.sectionName}

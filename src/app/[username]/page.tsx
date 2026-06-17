@@ -1,5 +1,6 @@
 import { getUserByUsername } from "@/lib/users";
 import { getAllMedia, getProjectCards, getPageContent, getProjectCardsForSection, getAllSections, getAllBrands } from "@/lib/content";
+import ViewMoreSections from "@/components/content/ViewMoreSections";
 import { getNavItems } from "@/lib/navItems";
 import SectionPageView from "@/components/content/SectionPageView";
 import FloatingPaths from "@/components/home/FloatingPaths";
@@ -94,38 +95,49 @@ export default async function UserHomePage({ params }: PageProps) {
   if (!defaultUser) return null;
 
   const slug = username;
-  const [content, navItems] = await Promise.all([
+  const [content, navItems, allSections] = await Promise.all([
     getPageContent(defaultUser.uid, slug),
     getNavItems(defaultUser.uid),
+    getAllSections(defaultUser.uid),
   ]);
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
+  // "username" is actually a slug here (not a real username), so always use clean section URLs
+  const sectionBase = "/sec";
 
   // Known project → render it
   if (navItem || content) {
+    const currentSectionSlug = navItem?.sectionName
+      ? (await import("@/lib/section-name")).sectionSlug(navItem.sectionName)
+      : null;
+    const otherSections = allSections
+      .filter((s) => s.slug !== currentSectionSlug)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2)
+      .map((s) => ({ name: s.name, href: `${sectionBase}/${s.slug}` }));
     return (
-      <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
-        <PageContent
-          slug={slug}
-          initialContent={content}
-          initialLabel={navItem?.label ?? slug}
-          initialRouteId={navItem?.id ?? ""}
-        />
+      <div className="flex flex-col">
+        <div className="h-full min-h-[80vh] py-12 px-2 md:px-8">
+          <PageContent
+            slug={slug}
+            initialContent={content}
+            initialLabel={navItem?.label ?? slug}
+            initialRouteId={navItem?.id ?? ""}
+          />
+        </div>
+        <ViewMoreSections sections={otherSections} />
       </div>
     );
   }
 
   // Check if slug matches a section name
-  const [sectionData, allSections] = await Promise.all([
-    getProjectCardsForSection(defaultUser.uid, slug),
-    getAllSections(defaultUser.uid),
-  ]);
+  const sectionData = await getProjectCardsForSection(defaultUser.uid, slug);
   if (sectionData) {
     const otherSections = allSections
       .filter((s) => s.slug !== slug)
       .sort(() => Math.random() - 0.5)
       .slice(0, 2)
-      .map((s) => ({ name: s.name, href: `/sec/${s.slug}` }));
+      .map((s) => ({ name: s.name, href: `${sectionBase}/${s.slug}` }));
     return (
       <SectionPageView
         sectionName={sectionData.sectionName}
