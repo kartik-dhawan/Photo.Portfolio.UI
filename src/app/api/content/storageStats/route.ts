@@ -3,6 +3,8 @@
 // Requires env vars: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getAdminDb } from '@/firebase/admin';
+import { ContentBlock, MediaItem } from '@/store/content/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -167,14 +169,30 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // ── Fetch both resource types in parallel ─────────────────────────────────
-        const [imageResources, videoResources] = await Promise.all([
+        // ── Fetch Cloudinary assets and Firestore content in parallel ─────────────
+        const [imageResources, videoResources, contentSnapshot] = await Promise.all([
             fetchAllResources(userId, 'image'),
             fetchAllResources(userId, 'video'),
+            getAdminDb().collection('portfolio_content').where('userId', '==', userId).get(),
         ]);
 
         const images = buildCategoryStats(imageResources);
         const videos = buildCategoryStats(videoResources);
+
+        // ── Bin: Cloudinary assets not referenced in any content block ────────────
+        const referencedUrls = new Set<string>();
+        for (const doc of contentSnapshot.docs) {
+            const data = doc.data();
+            for (const block of (data.blocks ?? []) as ContentBlock[]) {
+                for (const media of (block.media ?? []) as MediaItem[]) {
+                    if (media.url?.startsWith('http')) referencedUrls.add(media.url);
+                }
+            }
+        }
+
+        const binImages = images.files.filter((f) => !referencedUrls.has(f.url));
+        const binVideos = videos.files.filter((f) => !referencedUrls.has(f.url));
+        const binBytes = [...binImages, ...binVideos].reduce((s, f) => s + f.bytes, 0);
 
         const totalBytes = images.totalBytes + videos.totalBytes;
         const totalSizeMB = round2(totalBytes / (1024 * 1024));
@@ -189,14 +207,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             summary: {
                 totalFiles: images.count + videos.count,
                 totalBytes,
-                totalSize: formatFileSize(totalBytes),          // human-readable string
+                totalSize: formatFileSize(totalBytes),
                 totalSizeMB,
                 storageUsedMB: totalSizeMB,
                 storageLimitMB,
                 usagePercentage: round2((totalSizeMB / storageLimitMB) * 100),
             },
 
-            // Per-type breakdown (counts + sizes, no file list)
+            // Per-type breakdown
             breakdown: {
                 images: {
                     count: images.count,
@@ -212,7 +230,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 },
             },
 
-            // Full file metadata — include only what the client actually needs
+            // Bin: unreferenced Cloudinary assets (safe to permanently delete)
+            bin: {
+                count: binImages.length + binVideos.length,
+                totalSize: formatFileSize(binBytes),
+                images: binImages,
+                videos: binVideos,
+            },
+
+            // Full file metadata
             files: {
                 images: images.files,
                 videos: videos.files,

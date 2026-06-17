@@ -5,6 +5,7 @@ import { ContentBlock, ImageLayout, AspectRatio, MediaItem, Brand } from "@/stor
 import { useModal } from "@/components/common/useModal";
 import MediaMetaForm from "@/components/forms/media-meta/MediaMetaForm";
 import MediaCaption from "./MediaCaption";
+import ExistingMediaPicker from "./ExistingMediaPicker";
 import { FileUtils } from "@/lib/file-utils";
 
 interface Props {
@@ -25,6 +26,7 @@ export default function ImageBlockEditor({
   onFileRemove,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const replaceFileRef = useRef<HTMLInputElement>(null);
   const media = block.media ?? [];
   const layout = block.layout ?? "full";
   const aspectRatio = block.aspectRatio ?? "16/9";
@@ -37,8 +39,11 @@ export default function ImageBlockEditor({
   ];
   const [metaIndex, setMetaIndex] = useState<number>(-1);
   const metaSaveRef = useRef<(() => void) | null>(null);
+  // null = add mode, number = replace mode (index of item to replace)
+  const [pickerReplaceIndex, setPickerReplaceIndex] = useState<number | null>(null);
 
   const [metaModal, renderMetaModal] = useModal({ title: "Add Meta Data" });
+  const [pickerModal, renderPickerModal] = useModal({ title: "Choose Existing Media" });
 
   const addFile = (file: File): MediaItem => {
     const validation = FileUtils.validateFile(file);
@@ -46,7 +51,6 @@ export default function ImageBlockEditor({
       alert(validation.error!);
       throw new Error(validation.error!);
     }
-
     const blobUrl = URL.createObjectURL(file);
     const mediaType = file.type.startsWith("video/") ? "video" : "image";
     onFileAdd(blobUrl, file);
@@ -56,14 +60,12 @@ export default function ImageBlockEditor({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const validation = FileUtils.validateFile(file);
     if (!validation.isValid) {
       alert(validation.error!);
       e.target.value = "";
       return;
     }
-
     const item = addFile(file);
     onChange({ media: [...media, item].slice(0, maxMedia) });
     e.target.value = "";
@@ -82,13 +84,11 @@ export default function ImageBlockEditor({
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-
       const validation = FileUtils.validateFile(file);
       if (!validation.isValid) {
         alert(validation.error!);
         return;
       }
-
       const oldUrl = media[index]?.url;
       if (oldUrl) onFileRemove(oldUrl);
       const item = addFile(file);
@@ -98,6 +98,28 @@ export default function ImageBlockEditor({
     };
     input.click();
   };
+
+  const handleOpenPicker = (replaceIndex: number | null) => {
+    setPickerReplaceIndex(replaceIndex);
+    pickerModal.open();
+  };
+
+  const handlePickerSelect = useCallback(
+    (url: string, type: "image" | "video") => {
+      const item: MediaItem = { url, type };
+      if (pickerReplaceIndex !== null) {
+        const oldUrl = media[pickerReplaceIndex]?.url;
+        if (oldUrl) onFileRemove(oldUrl);
+        const newMedia = [...media];
+        newMedia[pickerReplaceIndex] = item;
+        onChange({ media: newMedia });
+      } else {
+        onChange({ media: [...media, item].slice(0, maxMedia) });
+      }
+      pickerModal.close();
+    },
+    [pickerReplaceIndex, media, onChange, onFileRemove, maxMedia, pickerModal]
+  );
 
   const handleOpenMeta = (index: number) => {
     setMetaIndex(index);
@@ -127,13 +149,13 @@ export default function ImageBlockEditor({
     });
   };
 
+  const btnClass =
+    "text-[10px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors cursor-pointer border border-zinc-800 rounded px-2 py-1";
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={toggleLayout}
-          className="text-[10px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors cursor-pointer border border-zinc-800 rounded px-2 py-1"
-        >
+      <div className="flex items-center gap-3 flex-wrap">
+        <button onClick={toggleLayout} className={btnClass}>
           Layout: {layout === "full" ? "1fr" : "1fr 1fr"}
         </button>
         {layout === "half" && (
@@ -142,10 +164,11 @@ export default function ImageBlockEditor({
               <button
                 key={r.value}
                 onClick={() => onChange({ aspectRatio: r.value })}
-                className={`text-[10px] uppercase tracking-wider transition-colors cursor-pointer border rounded px-2 py-1 ${aspectRatio === r.value
-                  ? "text-white border-zinc-600"
-                  : "text-zinc-600 border-zinc-800 hover:text-zinc-400"
-                  }`}
+                className={`text-[10px] uppercase tracking-wider transition-colors cursor-pointer border rounded px-2 py-1 ${
+                  aspectRatio === r.value
+                    ? "text-white border-zinc-600"
+                    : "text-zinc-600 border-zinc-800 hover:text-zinc-400"
+                }`}
               >
                 {r.label}
               </button>
@@ -154,11 +177,11 @@ export default function ImageBlockEditor({
         )}
         {media.length < maxMedia && (
           <>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="text-[10px] uppercase tracking-wider text-zinc-500 hover:text-white transition-colors cursor-pointer border border-zinc-800 rounded px-2 py-1"
-            >
-              + Add {media.length === 0 ? "Media" : "Second"}
+            <button onClick={() => fileRef.current?.click()} className={btnClass}>
+              + Upload
+            </button>
+            <button onClick={() => handleOpenPicker(null)} className={btnClass}>
+              + Choose Existing
             </button>
             <input
               ref={fileRef}
@@ -173,9 +196,7 @@ export default function ImageBlockEditor({
 
       <div
         className="grid gap-4"
-        style={{
-          gridTemplateColumns: layout === "half" ? "1fr 1fr" : "1fr",
-        }}
+        style={{ gridTemplateColumns: layout === "half" ? "1fr 1fr" : "1fr" }}
       >
         {Array.from({ length: layout === "half" ? 2 : 1 }).map((_, i) => {
           const item = media[i];
@@ -197,17 +218,9 @@ export default function ImageBlockEditor({
                 style={{ aspectRatio: layout === "half" ? aspectRatio : "16/9" }}
               >
                 {item.type === "video" ? (
-                  <video
-                    src={item.url}
-                    controls
-                    className="w-full h-full object-cover rounded"
-                  />
+                  <video src={item.url} controls className="w-full h-full object-cover rounded" />
                 ) : (
-                  <img
-                    src={item.url}
-                    alt=""
-                    className="w-full h-full object-cover rounded"
-                  />
+                  <img src={item.url} alt="" className="w-full h-full object-cover rounded" />
                 )}
                 <div className="absolute top-2 right-2 hidden group-hover:flex gap-1">
                   <button
@@ -220,7 +233,13 @@ export default function ImageBlockEditor({
                     onClick={() => handleReplace(i)}
                     className="bg-black/70 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded cursor-pointer hover:bg-black transition-colors"
                   >
-                    Replace
+                    Upload
+                  </button>
+                  <button
+                    onClick={() => handleOpenPicker(i)}
+                    className="bg-black/70 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded cursor-pointer hover:bg-black transition-colors"
+                  >
+                    Pick
                   </button>
                   <button
                     onClick={() => handleRemove(i)}
@@ -230,9 +249,7 @@ export default function ImageBlockEditor({
                   </button>
                 </div>
               </div>
-              {(item.title || item.date) && (
-                <MediaCaption item={item} />
-              )}
+              {(item.title || item.date) && <MediaCaption item={item} />}
             </div>
           );
         })}
@@ -250,16 +267,15 @@ export default function ImageBlockEditor({
         ) : null,
         {
           size: "sm",
-          okButtonProps: {
-            label: "Save",
-            onClick: () => metaSaveRef.current?.(),
-          },
-          cancelButtonProps: {
-            label: "Cancel",
-            onClick: () => metaModal.close(),
-          },
+          okButtonProps: { label: "Save", onClick: () => metaSaveRef.current?.() },
+          cancelButtonProps: { label: "Cancel", onClick: () => metaModal.close() },
         }
       )}
+
+      {renderPickerModal(<ExistingMediaPicker onSelect={handlePickerSelect} />, {
+        size: "xl",
+        cancelButtonProps: { label: "Cancel", onClick: () => pickerModal.close() },
+      })}
     </div>
   );
 }

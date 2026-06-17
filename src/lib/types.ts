@@ -32,6 +32,7 @@ export interface NavItem {
   pinned?: boolean;
   hideFromHome?: boolean;
   excludeFromGallery?: boolean;
+  isShareable?: boolean;
   userId?: string;
 }
 

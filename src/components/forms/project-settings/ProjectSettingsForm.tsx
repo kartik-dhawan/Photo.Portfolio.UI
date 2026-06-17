@@ -64,6 +64,8 @@ export default function ProjectSettingsForm({
   });
 
   const tagInput = watch('tagInput');
+  const isShareable = watch('isShareable');
+  const wasShareable = initialValues.isShareable ?? false;
 
   const {
     fields: brandFields,
@@ -201,6 +203,7 @@ export default function ProjectSettingsForm({
       if (values.pinned !== initialValues.pinned) routeData.pinned = !!values.pinned;
       if (values.hideFromHome !== initialValues.hideFromHome) routeData.hideFromHome = !!values.hideFromHome;
       if (values.excludeFromGallery !== initialValues.excludeFromGallery) routeData.excludeFromGallery = !!values.excludeFromGallery;
+      if (values.isShareable !== initialValues.isShareable) routeData.isShareable = !!values.isShareable;
 
       await Promise.all([
         updateSettings({ brands: finalBrands, tags: finalTags, filmedAt, sectionNames }),
@@ -308,6 +311,21 @@ export default function ProjectSettingsForm({
             Exclude photos from main gallery
           </span>
         </label>
+        <label className="flex items-center gap-2 cursor-pointer col-span-2">
+          <input
+            {...register('isShareable')}
+            type="checkbox"
+            className="w-4 h-4 accent-white cursor-pointer shrink-0"
+          />
+          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono">
+            Make content from this page shareable (others can reuse images)
+          </span>
+        </label>
+        {wasShareable && !isShareable && (
+          <p className="col-span-2 text-[10px] font-mono text-zinc-500 bg-zinc-800/50 border border-zinc-700 rounded px-3 py-2">
+            Note: Images already referenced by other users will continue to work — this only prevents new picks.
+          </p>
+        )}
       </div>
 
       {/* Filmed date */}

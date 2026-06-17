@@ -6,7 +6,6 @@ import {
   fetchPageContent,
   savePageContent,
   uploadMedia,
-  deleteMedia,
   setDraft,
   clearDraft,
   addBlock,
@@ -81,8 +80,6 @@ export default function PageContent({
   const pendingFiles = useRef<Map<string, File>>(new Map());
   // Track blob URLs that were removed so we don't upload them
   const removedBlobs = useRef<Set<string>>(new Set());
-  // Track remote URLs that were removed so we delete them on save
-  const removedRemoteUrls = useRef<string[]>([]);
 
   // Hydrate redux from server data on first load; fetch fresh data when admin
   const hydrated = useRef(false);
@@ -108,7 +105,6 @@ export default function PageContent({
     dispatch(setDraft({ slug, blocks: page?.blocks ?? [] }));
     pendingFiles.current.clear();
     removedBlobs.current.clear();
-    removedRemoteUrls.current = [];
     setEditing(true);
   };
 
@@ -116,7 +112,6 @@ export default function PageContent({
     pendingFiles.current.forEach((_, blobUrl) => URL.revokeObjectURL(blobUrl));
     pendingFiles.current.clear();
     removedBlobs.current.clear();
-    removedRemoteUrls.current = [];
     dispatch(clearDraft(slug));
     setEditing(false);
   };
@@ -124,10 +119,6 @@ export default function PageContent({
   const handleSave = async () => {
     if (!draftBlockList || isSaving) return;
     setIsSaving(true);
-
-    if (removedRemoteUrls.current.length) {
-      await dispatch(deleteMedia(removedRemoteUrls.current));
-    }
 
     const blobToRemote = new Map<string, string>();
     const uploads = Array.from(pendingFiles.current.entries())
@@ -160,7 +151,6 @@ export default function PageContent({
     );
     pendingFiles.current.clear();
     removedBlobs.current.clear();
-    removedRemoteUrls.current = [];
     setIsSaving(false);
     setEditing(false);
   };
@@ -171,12 +161,12 @@ export default function PageContent({
 
   const handleFileRemove = useCallback((url: string) => {
     if (pendingFiles.current.has(url)) {
+      // Blob URL that was never saved — cancel the pending upload
       pendingFiles.current.delete(url);
       removedBlobs.current.add(url);
       URL.revokeObjectURL(url);
-    } else if (url.startsWith('http')) {
-      removedRemoteUrls.current.push(url);
     }
+    // Remote Cloudinary URLs are soft-deleted: reference removed but asset kept in Bin
   }, []);
 
   const handleAddBlock = (type: BlockType) => {
@@ -249,6 +239,7 @@ export default function PageContent({
           pinned: !!values.pinned,
           hideFromHome: !!values.hideFromHome,
           excludeFromGallery: !!values.excludeFromGallery,
+          isShareable: !!values.isShareable,
         },
       })
     );
@@ -262,6 +253,7 @@ export default function PageContent({
     pinned: !!navItem?.pinned,
     hideFromHome: !!navItem?.hideFromHome,
     excludeFromGallery: !!navItem?.excludeFromGallery,
+    isShareable: !!navItem?.isShareable,
     youtubeTitle: sectionNames?.youtube ?? '',
     instagramTitle: sectionNames?.instagram ?? '',
     tagInput: '',
