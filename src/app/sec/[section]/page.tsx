@@ -7,18 +7,12 @@ export const revalidate = 60;
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
 
 interface PageProps {
-  params: Promise<{ username: string; section: string }>;
-}
-
-async function resolveUser(username: string) {
-  const user = await getUserByUsername(username);
-  if (user) return user;
-  return getUserByUsername(DEFAULT_USERNAME);
+  params: Promise<{ section: string }>;
 }
 
 export default async function SectionRoute({ params }: PageProps) {
-  const { username, section } = await params;
-  const user = await resolveUser(username);
+  const { section } = await params;
+  const user = await getUserByUsername(DEFAULT_USERNAME);
   if (!user) return null;
 
   const [sectionData, allSections] = await Promise.all([
@@ -34,12 +28,11 @@ export default async function SectionRoute({ params }: PageProps) {
     );
   }
 
-  const sectionBase = "/sec";
   const otherSections = allSections
     .filter((s) => s.slug !== section)
     .sort(() => Math.random() - 0.5)
     .slice(0, 2)
-    .map((s) => ({ name: s.name, href: `${sectionBase}/${s.slug}` }));
+    .map((s) => ({ name: s.name, href: `/sec/${s.slug}` }));
 
   return (
     <SectionPageView

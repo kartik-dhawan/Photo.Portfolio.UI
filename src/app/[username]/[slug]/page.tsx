@@ -91,10 +91,7 @@ export default async function SectionPage({ params }: PageProps) {
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
 
-  // If the URL username matches the resolved user, we're in named-user mode (e.g. /kartik/slug).
-  // Otherwise the "username" segment is actually a slug/section (clean-URL or custom-domain mode).
-  // Use named-user prefix only when the URL username matches the resolved user
-  const sectionBase = user.username === username ? `/${username}/sec` : "/sec";
+  const sectionBase = "/sec";
 
   // Known project → render it
   if (navItem || content) {
