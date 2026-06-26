@@ -285,13 +285,15 @@ export async function getAllMedia(
   }
 
   const allItems: CollectionItem[] = [];
+  const projectUpdatedAt = new Map<string, string>();
 
   for (const doc of contentSnapshot.docs) {
-    const data = doc.data() as PageContent & { slug: string };
+    const data = doc.data() as PageContent & { slug: string; updatedAt?: string; createdAt?: string };
     const slug = data.slug;
     const route = routeMap.get(slug);
     if (route?.hidden || route?.excludeFromGallery) continue;
     const projectName = route?.label ?? slug;
+    projectUpdatedAt.set(slug, data.updatedAt ?? data.createdAt ?? "");
 
     for (const block of data.blocks ?? []) {
       if (block.type !== "image") continue;
@@ -309,6 +311,9 @@ export async function getAllMedia(
   }
 
   allItems.sort((a, b) => {
+    const projA = projectUpdatedAt.get(a.projectSlug) ?? "";
+    const projB = projectUpdatedAt.get(b.projectSlug) ?? "";
+    if (projA !== projB) return projB.localeCompare(projA);
     if (a.date && b.date) return b.date.localeCompare(a.date);
     if (a.date) return -1;
     if (b.date) return 1;
