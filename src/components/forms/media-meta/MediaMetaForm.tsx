@@ -16,7 +16,7 @@ import { uploadToStorage } from "@/lib/upload";
 interface Props {
   item: MediaItem;
   brands?: Brand[];
-  onSave: (data: Partial<Pick<MediaItem, "title" | "date" | "duration" | "link" | "brandId" | "thumbnailUrl">>) => void;
+  onSave: (data: Partial<Pick<MediaItem, "title" | "date" | "duration" | "link" | "brandId" | "thumbnailUrl" | "thumbnailSize">>) => void;
   saveRef: MutableRefObject<(() => void) | null>;
   showThumbnail?: boolean;
   slug?: string;
@@ -40,6 +40,7 @@ export default function MediaMetaForm({ item, brands, onSave, saveRef, showThumb
   });
 
   const [thumbnailUrl, setThumbnailUrl] = useState<string | undefined>(item.thumbnailUrl);
+  const [thumbnailSize, setThumbnailSize] = useState<"small" | "large">(item.thumbnailSize ?? "small");
   const [showPicker, setShowPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export default function MediaMetaForm({ item, brands, onSave, saveRef, showThumb
       duration: parseDuration(data.duration) || undefined,
       link: data.link || undefined,
       brandId: data.brandId || undefined,
-      ...(showThumbnail ? { thumbnailUrl: thumbnailUrl || undefined } : {}),
+      ...(showThumbnail ? { thumbnailUrl: thumbnailUrl || undefined, thumbnailSize } : {}),
     });
   };
 
@@ -168,19 +169,37 @@ export default function MediaMetaForm({ item, brands, onSave, saveRef, showThumb
           </span>
 
           {thumbnailUrl ? (
-            <div className="flex items-start gap-3">
-              <img
-                src={thumbnailUrl}
-                alt=""
-                className="w-16 h-16 object-cover rounded border border-zinc-700 shrink-0"
-              />
-              <button
-                type="button"
-                onClick={() => setThumbnailUrl(undefined)}
-                className="text-zinc-500 hover:text-red-400 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                Remove
-              </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-3">
+                <img
+                  src={thumbnailUrl}
+                  alt=""
+                  className="w-16 h-16 object-cover rounded border border-zinc-700 shrink-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => setThumbnailUrl(undefined)}
+                  className="text-zinc-500 hover:text-red-400 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Remove
+                </button>
+              </div>
+              <div className="flex gap-2">
+                {(["small", "large"] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setThumbnailSize(size)}
+                    className={`text-[10px] uppercase tracking-wider font-mono px-3 py-1 rounded border transition-colors cursor-pointer ${
+                      thumbnailSize === size
+                        ? "text-white border-zinc-500"
+                        : "text-zinc-500 border-zinc-800 hover:text-zinc-300"
+                    }`}
+                  >
+                    {size === "small" ? "Small — inline" : "Large — above title"}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="flex gap-2">

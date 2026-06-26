@@ -11,6 +11,7 @@ export interface MediaItem {
   link?: string;
   brandId?: string;
   thumbnailUrl?: string;
+  thumbnailSize?: "small" | "large";
 }
 
 export interface Brand {
