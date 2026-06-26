@@ -30,6 +30,7 @@ export interface NavItem {
   sectionName: string;
   order: number;
   pinned?: boolean;
+  pinnedAt?: number;
   hideFromHome?: boolean;
   excludeFromGallery?: boolean;
   isShareable?: boolean;

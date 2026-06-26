@@ -25,6 +25,7 @@ export default function ProjectsGrid({ projects }: Props) {
         const pinnedB = !!navB?.pinned;
         if (pinnedA && !pinnedB) return -1;
         if (!pinnedA && pinnedB) return 1;
+        if (pinnedA && pinnedB) return (navB?.pinnedAt ?? 0) - (navA?.pinnedAt ?? 0);
         return 0;
       });
   }, [projects, navItems]);

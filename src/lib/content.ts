@@ -122,6 +122,7 @@ export interface ProjectCard {
   filmedAt?: string;
   brandNames?: string[];
   pinned?: boolean;
+  pinnedAt?: number;
 }
 
 export async function getProjectCards(userId: string): Promise<ProjectCard[]> {
@@ -164,12 +165,14 @@ export async function getProjectCards(userId: string): Promise<ProjectCard[]> {
       filmedAt: content?.filmedAt,
       brandNames: content?.brandNames,
       pinned: !!data.pinned,
+      pinnedAt: (data.pinnedAt as number) || 0,
     });
   }
 
   cards.sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
+    if (a.pinned && b.pinned) return (b.pinnedAt ?? 0) - (a.pinnedAt ?? 0);
     return 0;
   });
 

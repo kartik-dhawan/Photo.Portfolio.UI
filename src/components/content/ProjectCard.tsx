@@ -49,8 +49,9 @@ export default function ProjectCard({ project }: Props) {
     e.stopPropagation();
     if (!navItem) return;
     const newValue = !navItem[field];
-    const data: Record<string, boolean> = { [field]: newValue };
-    if (newValue && field === "pinned") data.hideFromHome = false;
+    const data: Record<string, boolean | number> = { [field]: newValue };
+    if (newValue && field === "pinned") { data.hideFromHome = false; data.pinnedAt = Date.now(); }
+    if (!newValue && field === "pinned") data.pinnedAt = 0;
     if (newValue && field === "hideFromHome") data.pinned = false;
     dispatch(updateNavItem({ id: navItem.id, data }));
   };
