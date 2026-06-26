@@ -10,6 +10,7 @@ export interface MediaItem {
   duration?: number; // seconds, for video
   link?: string;
   brandId?: string;
+  thumbnailUrl?: string;
 }
 
 export interface Brand {

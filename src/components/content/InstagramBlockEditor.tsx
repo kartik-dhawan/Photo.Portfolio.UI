@@ -17,9 +17,11 @@ interface Props {
   block: ContentBlock;
   brands?: Brand[];
   onChange: (data: Partial<ContentBlock>) => void;
+  slug: string;
+  userId: string;
 }
 
-export default function InstagramBlockEditor({ block, brands, onChange }: Props) {
+export default function InstagramBlockEditor({ block, brands, onChange, slug, userId }: Props) {
   const media = block.media ?? [];
   const layout = block.layout ?? "full";
   const maxMedia = layout === "third" ? 3 : layout === "half" ? 2 : 1;
@@ -143,7 +145,7 @@ export default function InstagramBlockEditor({ block, brands, onChange }: Props)
                   </p>
                 )
               )}
-              {(item.title || item.date) && (
+              {(item.title || item.date || item.brandId) && (
                 <MediaCaption
                   item={item}
                   brand={
@@ -166,10 +168,13 @@ export default function InstagramBlockEditor({ block, brands, onChange }: Props)
             brands={brands}
             onSave={handleSaveMeta}
             saveRef={metaSaveRef}
+            showThumbnail
+            slug={slug}
+            userId={userId}
           />
         ) : null,
         {
-          size: "sm",
+          size: "md",
           okButtonProps: {
             label: "Save",
             onClick: () => metaSaveRef.current?.(),

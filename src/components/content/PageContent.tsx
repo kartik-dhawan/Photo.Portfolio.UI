@@ -552,6 +552,8 @@ export default function PageContent({
                   block={block}
                   brands={brands}
                   onChange={(data) => handleUpdateBlock(block.id, data)}
+                  slug={slug}
+                  userId={tenantUserId}
                 />
               ) : block.type === 'spacer' ? (
                 <div className="flex items-center justify-center h-8 text-zinc-700 text-[10px] xl:text-xs uppercase tracking-wider border border-dashed border-zinc-800 rounded">
