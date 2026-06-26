@@ -53,12 +53,12 @@ export default function InstagramBlockView({ block, brands }: Props) {
             </svg>
             <div className="flex flex-col min-w-0">
               {item.title && (
-                <span className="text-white text-sm font-mono truncate">
+                <span className="text-white text-sm font-mono truncate text-left">
                   {item.title}
                 </span>
               )}
               {(item.date || item.brandId) && (
-                <MediaCaption item={item} brand={brand} />
+                <MediaCaption item={{ ...item, title: undefined }} brand={brand} className="text-left" />
               )}
               {!item.title && !item.date && !item.brandId && (
                 <span className="text-zinc-500 text-xs font-mono">

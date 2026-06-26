@@ -4,9 +4,10 @@ import { formatDuration } from "@/components/forms/media-meta/schema";
 interface Props {
   item: MediaItem;
   brand?: Brand;
+  className?: string;
 }
 
-export default function MediaCaption({ item, brand }: Props) {
+export default function MediaCaption({ item, brand, className }: Props) {
   const parts: string[] = [];
   if (item.title) parts.push(item.title);
   if (brand) parts.push(brand.name);
@@ -19,7 +20,7 @@ export default function MediaCaption({ item, brand }: Props) {
   const caption = parts.join(" — ");
 
   return (
-    <p className="text-zinc-400 text-xs font-mono text-center break-words">
+    <p className={`text-zinc-400 text-xs font-mono text-center break-words${className ? ` ${className}` : ""}`}>
       {item.link ? (
         <a
           href={item.link}
