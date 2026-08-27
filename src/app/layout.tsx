@@ -4,6 +4,7 @@ import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
 import OnboardingForm from "@/components/OnboardingForm";
 import Footer from "@/components/Footer";
+import Toaster from "@/components/common/Toaster";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -62,6 +63,7 @@ export default async function RootLayout({
           <OnboardingForm />
           {children}
           <Footer />
+          <Toaster />
         </StoreProvider>
       </body>
     </html>

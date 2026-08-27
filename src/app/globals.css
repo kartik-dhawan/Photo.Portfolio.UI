@@ -20,6 +20,14 @@ body {
   font-family: var(--font-geist-mono), monospace;
 }
 
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes scroll-arrow {
   0% {
     transform: translateY(-100%);

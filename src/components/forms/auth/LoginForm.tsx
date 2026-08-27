@@ -7,13 +7,15 @@ import { loginSchema, LoginFormValues } from "./schema";
 interface Props {
   onSubmit: (data: LoginFormValues) => Promise<void>;
   onCancel: () => void;
+  onForgotPassword: (email: string) => void;
   serverError?: string;
 }
 
-export default function LoginForm({ onSubmit, onCancel, serverError }: Props) {
+export default function LoginForm({ onSubmit, onCancel, onForgotPassword, serverError }: Props) {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
@@ -43,7 +45,7 @@ export default function LoginForm({ onSubmit, onCancel, serverError }: Props) {
       {serverError && (
         <span className="text-red-500 text-[10px]">{serverError}</span>
       )}
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center">
         <button
           type="submit"
           disabled={isSubmitting}
@@ -57,6 +59,13 @@ export default function LoginForm({ onSubmit, onCancel, serverError }: Props) {
           className="text-zinc-700 hover:text-zinc-400 text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
         >
           Cancel
+        </button>
+        <button
+          type="button"
+          onClick={() => onForgotPassword(getValues("email") ?? "")}
+          className="text-zinc-700 hover:text-zinc-400 text-[10px] uppercase tracking-wider transition-colors cursor-pointer ml-auto"
+        >
+          Reset password
         </button>
       </div>
     </form>
