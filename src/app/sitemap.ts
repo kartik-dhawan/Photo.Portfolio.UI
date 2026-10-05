@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getNavItems } from '@/lib/navItems';
 import { getAllUsers } from '@/lib/users';
+import { FirestoreNavItem } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   for (const user of users) {
-    let navItems = [];
+    let navItems: FirestoreNavItem[] = [];
     try {
       navItems = await getNavItems(user.uid);
     } catch {
