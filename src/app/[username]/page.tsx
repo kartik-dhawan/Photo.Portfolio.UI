@@ -12,10 +12,27 @@ import PageContent from "@/components/content/PageContent";
 import AdminRedirect from "@/components/AdminRedirect";
 import BrandsStrip from "@/components/home/BrandsStrip";
 
-function ServiceUnavailable() {
+function isQuotaError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes('Quota exceeded') || error.message.includes('RESOURCE_EXHAUSTED');
+  }
+  return (error as { code?: number })?.code === 8;
+}
+
+function ServiceUnavailable({ quota = false }: { quota?: boolean }) {
+  if (quota) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-3">
+        <p className="text-zinc-400 text-sm font-mono uppercase tracking-widest">Maintenance block</p>
+        <p className="text-zinc-600 text-xs font-mono text-center max-w-xs">
+          Firebase read quota exceeded. Service will resume after 12:30 PM.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p className="text-zinc-600 text-sm font-mono">Temporarily unavailable — please try again shortly.</p>
+      <p className="text-zinc-600 text-sm font-mono">Service unavailable temporarily, please check after a while.</p>
     </div>
   );
 }
@@ -35,8 +52,8 @@ export default async function UserHomePage({ params }: PageProps) {
   let user;
   try {
     user = await getUserByUsername(username);
-  } catch {
-    return <ServiceUnavailable />;
+  } catch (e) {
+    return <ServiceUnavailable quota={isQuotaError(e)} />;
   }
 
   if (user) {
@@ -116,8 +133,8 @@ export default async function UserHomePage({ params }: PageProps) {
   let defaultUser;
   try {
     defaultUser = await getUserByUsername(DEFAULT_USERNAME);
-  } catch {
-    return <ServiceUnavailable />;
+  } catch (e) {
+    return <ServiceUnavailable quota={isQuotaError(e)} />;
   }
   if (!defaultUser) return null;
 
@@ -129,8 +146,8 @@ export default async function UserHomePage({ params }: PageProps) {
       getNavItems(defaultUser.uid),
       getAllSections(defaultUser.uid),
     ]));
-  } catch {
-    return <ServiceUnavailable />;
+  } catch (e) {
+    return <ServiceUnavailable quota={isQuotaError(e)} />;
   }
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
@@ -166,8 +183,8 @@ export default async function UserHomePage({ params }: PageProps) {
   let sectionData;
   try {
     sectionData = await getProjectCardsForSection(defaultUser.uid, slug);
-  } catch {
-    return <ServiceUnavailable />;
+  } catch (e) {
+    return <ServiceUnavailable quota={isQuotaError(e)} />;
   }
   if (sectionData) {
     const otherSections = allSections
