@@ -2,10 +2,11 @@ import { MetadataRoute } from 'next';
 import { getNavItems } from '@/lib/navItems';
 import { getAllUsers } from '@/lib/users';
 
+export const dynamic = 'force-dynamic';
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kartikdhawan.in';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const users = await getAllUsers();
   const allPages: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
@@ -15,8 +16,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  let users;
+  try {
+    users = await getAllUsers();
+  } catch {
+    return allPages;
+  }
+
   for (const user of users) {
-    const navItems = await getNavItems(user.uid);
+    let navItems = [];
+    try {
+      navItems = await getNavItems(user.uid);
+    } catch {
+      // skip nav items for this user if unavailable
+    }
     allPages.push({
       url: `${SITE_URL}/${user.username}`,
       lastModified: new Date(),
