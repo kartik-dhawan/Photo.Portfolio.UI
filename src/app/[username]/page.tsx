@@ -12,6 +12,14 @@ import PageContent from "@/components/content/PageContent";
 import AdminRedirect from "@/components/AdminRedirect";
 import BrandsStrip from "@/components/home/BrandsStrip";
 
+function ServiceUnavailable() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <p className="text-zinc-600 text-sm font-mono">Temporarily unavailable — please try again shortly.</p>
+    </div>
+  );
+}
+
 export const revalidate = 60;
 
 const PAGE_SIZE = 20;
@@ -23,15 +31,29 @@ interface PageProps {
 
 export default async function UserHomePage({ params }: PageProps) {
   const { username } = await params;
-  const user = await getUserByUsername(username);
+
+  let user;
+  try {
+    user = await getUserByUsername(username);
+  } catch {
+    return <ServiceUnavailable />;
+  }
 
   if (user) {
     // Real username — render their home page
-    const [{ items, total }, projects, allBrands] = await Promise.all([
-      getAllMedia(user.uid, 1, PAGE_SIZE),
-      getProjectCards(user.uid),
-      getAllBrands(user.uid),
-    ]);
+    let items: Awaited<ReturnType<typeof getAllMedia>>['items'] = [];
+    let total = 0;
+    let projects: Awaited<ReturnType<typeof getProjectCards>> = [];
+    let allBrands: Awaited<ReturnType<typeof getAllBrands>> = [];
+    try {
+      ([{ items, total }, projects, allBrands] = await Promise.all([
+        getAllMedia(user.uid, 1, PAGE_SIZE),
+        getProjectCards(user.uid),
+        getAllBrands(user.uid),
+      ]));
+    } catch {
+      return <ServiceUnavailable />;
+    }
     // Deduplicate by name, keep only brands with a logo
     const seen = new Set<string>();
     const brands = allBrands
@@ -91,15 +113,25 @@ export default async function UserHomePage({ params }: PageProps) {
 
   // Not a real username — treat as a slug for the default user
   // e.g. /portraits → render default user's "portraits" project page
-  const defaultUser = await getUserByUsername(DEFAULT_USERNAME);
+  let defaultUser;
+  try {
+    defaultUser = await getUserByUsername(DEFAULT_USERNAME);
+  } catch {
+    return <ServiceUnavailable />;
+  }
   if (!defaultUser) return null;
 
   const slug = username;
-  const [content, navItems, allSections] = await Promise.all([
-    getPageContent(defaultUser.uid, slug),
-    getNavItems(defaultUser.uid),
-    getAllSections(defaultUser.uid),
-  ]);
+  let content, navItems, allSections;
+  try {
+    ([content, navItems, allSections] = await Promise.all([
+      getPageContent(defaultUser.uid, slug),
+      getNavItems(defaultUser.uid),
+      getAllSections(defaultUser.uid),
+    ]));
+  } catch {
+    return <ServiceUnavailable />;
+  }
 
   const navItem = navItems.find((item) => item.route === `/${slug}`);
   // "username" is actually a slug here (not a real username), so always use clean section URLs
@@ -131,7 +163,12 @@ export default async function UserHomePage({ params }: PageProps) {
   }
 
   // Check if slug matches a section name
-  const sectionData = await getProjectCardsForSection(defaultUser.uid, slug);
+  let sectionData;
+  try {
+    sectionData = await getProjectCardsForSection(defaultUser.uid, slug);
+  } catch {
+    return <ServiceUnavailable />;
+  }
   if (sectionData) {
     const otherSections = allSections
       .filter((s) => s.slug !== slug)
