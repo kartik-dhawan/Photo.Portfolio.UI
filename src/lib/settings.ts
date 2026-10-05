@@ -1,11 +1,12 @@
+import { cache } from "react";
 import { getAdminDb } from "@/firebase/admin";
 
-export async function getSettings(userId: string): Promise<{ profilePhotoUrl: string }> {
+export const getSettings = cache(async function getSettings(userId: string): Promise<{ profilePhotoUrl: string }> {
   const db = getAdminDb();
   const doc = await db.doc(`portfolio_settings/${userId}`).get();
   if (!doc.exists) return { profilePhotoUrl: "" };
   return doc.data() as { profilePhotoUrl: string };
-}
+});
 
 export async function updateSettings(
   userId: string,

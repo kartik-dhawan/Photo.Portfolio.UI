@@ -37,7 +37,7 @@ function ServiceUnavailable({ quota = false }: { quota?: boolean }) {
   );
 }
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const PAGE_SIZE = 20;
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";

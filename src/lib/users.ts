@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getAdminDb } from "@/firebase/admin";
 import { UserProfile, UserRole } from "./types";
 import { setUserClaims } from "./auth";
@@ -5,14 +6,14 @@ import { setUserClaims } from "./auth";
 const USERS = "users";
 const USERNAMES = "usernames";
 
-export async function getUserByUid(uid: string): Promise<UserProfile | null> {
+export const getUserByUid = cache(async function getUserByUid(uid: string): Promise<UserProfile | null> {
   const db = getAdminDb();
   const doc = await db.collection(USERS).doc(uid).get();
   if (!doc.exists) return null;
   return { uid: doc.id, ...doc.data() } as UserProfile;
-}
+});
 
-export async function getUserByUsername(
+export const getUserByUsername = cache(async function getUserByUsername(
   username: string
 ): Promise<UserProfile | null> {
   const db = getAdminDb();
@@ -20,7 +21,7 @@ export async function getUserByUsername(
   if (!usernameDoc.exists) return null;
   const { userId } = usernameDoc.data() as { userId: string };
   return getUserByUid(userId);
-}
+});
 
 export async function createUser(data: {
   uid: string;

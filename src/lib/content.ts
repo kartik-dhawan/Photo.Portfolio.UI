@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getAdminDb } from "@/firebase/admin";
 import { Brand, ContentBlock, PageContent, CollectionItem, CollectionsResponse, SectionNames } from "@/store/content/types";
 
@@ -7,7 +8,7 @@ function contentDocId(userId: string, slug: string): string {
   return `${userId}_${slug}`;
 }
 
-export async function getPageContent(
+export const getPageContent = cache(async function getPageContent(
   userId: string,
   slug: string
 ): Promise<PageContent | null> {
@@ -15,7 +16,7 @@ export async function getPageContent(
   const doc = await db.collection(COLLECTION).doc(contentDocId(userId, slug)).get();
   if (!doc.exists) return null;
   return { slug, ...doc.data() } as PageContent;
-}
+});
 
 export async function savePageContent(
   userId: string,

@@ -2,7 +2,7 @@ import { getUserByUsername } from "@/lib/users";
 import { getProjectCardsForSection, getAllSections } from "@/lib/content";
 import SectionPageView from "@/components/content/SectionPageView";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
 

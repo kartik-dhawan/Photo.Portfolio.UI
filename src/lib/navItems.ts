@@ -1,9 +1,10 @@
+import { cache } from "react";
 import { getAdminDb } from "../firebase/admin";
 import { FirestoreNavItem } from "./types";
 
 const COLLECTION = "portfolio_routes";
 
-export async function getNavItems(userId: string): Promise<FirestoreNavItem[]> {
+export const getNavItems = cache(async function getNavItems(userId: string): Promise<FirestoreNavItem[]> {
   const db = getAdminDb();
   const snapshot = await db
     .collection(COLLECTION)
@@ -13,7 +14,7 @@ export async function getNavItems(userId: string): Promise<FirestoreNavItem[]> {
   return snapshot.docs.map(
     (d) => ({ id: d.id, ...d.data() } as FirestoreNavItem)
   );
-}
+});
 
 export async function addNavItem(
   userId: string,

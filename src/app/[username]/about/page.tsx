@@ -5,7 +5,7 @@ import { getSettings } from "@/lib/settings";
 import AboutContent from "@/components/content/AboutContent";
 import SocialLinksSection from "@/components/forms/social-links/SocialLinksSection";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME ?? "kartik";
 
